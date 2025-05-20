@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Physics</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.18.0/matter.min.js"></script>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <div class="start-screen-content">
+                <div class="start-image-container">
+                    <img src="assets/start screen.png" alt="Football Game" class="start-image">
+                    <button id="start-match" class="arabic-button">
+                        <span class="button-text">ابدأ اللعبة</span>
+                        <span class="button-shine"></span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="team-select-card" style="display: none;">
+                <h2 class="team-select-title">أختر فريقك</h2>
+                <div class="team-selection-container">
+                    <div class="flags-grid" id="flags-grid-1"></div>
+                </div>
+                <div id="start-game-button-container"></div>
+            </div>
+        </div>
+
+            <!-- Game Screen -->
+        <div id="game-screen" class="screen" style="display: none;">
+            <!-- Top crowd above scoreboard -->
+            <div class="crowd-top">
+                <div class="flash1"></div>
+                <div class="flash2"></div>
+                <div class="flash3"></div>
+                <div class="flash4"></div>
+                <div class="flash5"></div>
+            </div>
+
+            <div class="scoreboard">
+                <div class="team">
+                    <div id="player1-flag-small" class="flag-small"></div>
+                    <div id="player1-score" class="score">0</div>
+                </div>
+                <div id="timer" class="timer">1:00</div>
+                <div class="team">
+                    <div id="player2-score" class="score">0</div>
+                    <div id="player2-flag-small" class="flag-small"></div>
+                </div>
+            </div>
+            <div class="field-container">
+                <!-- Left stand with digital display -->
+                <div class="stand stand-left">
+                    <div class="stand-structure">
+                        <div class="stand-overlay"></div>
+                        <div class="stand-crowd"></div>
+                        <div class="stand-lights"></div>
+                    </div>
+                    <div class="stand-screen">
+                        <div class="screen-content screen-content-left">
+                            <!-- First set of content -->
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player1.jpg" alt="Player 1" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="tournament/cup.png" alt="Cup" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player2.jpg" alt="Player 2" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player3.jpg" alt="Player 3" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player1.jpg" alt="Player 1" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player2.jpg" alt="Player 2" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player3.jpg" alt="Player 3" class="face-right">
+                            </div>
+
+                            <!-- Duplicate content for seamless scrolling -->
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player1.jpg" alt="Player 1" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="tournament/cup.png" alt="Cup" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player2.jpg" alt="Player 2" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player3.jpg" alt="Player 3" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player1.jpg" alt="Player 1" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player2.jpg" alt="Player 2" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-right">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player3.jpg" alt="Player 3" class="face-right">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="game-field" class="game-field">
+                    <!-- Field image as a normal img element -->
+                    <img src="field/field.png" alt="Field" class="field-image">
+
+                    <!-- CSS-based field markings -->
+                    <div class="field-markings">
+                        <div></div>
+                        <div class="center-line"></div>
+                        <div class="center-circle"></div>
+                        <div class="center-spot"></div>
+                        <div class="field-logo"></div>
+                        <div class="penalty-area-top"></div>
+                        <div class="penalty-area-bottom"></div>
+                        <div class="penalty-spot-top"></div>
+                        <div class="penalty-spot-bottom"></div>
+                        <div class="corner-arc corner-arc-top-left"></div>
+                        <div class="corner-arc corner-arc-top-right"></div>
+                        <div class="corner-arc corner-arc-bottom-left"></div>
+                        <div class="corner-arc corner-arc-bottom-right"></div>
+                        <div class="goal-top">
+                            <div class="goal-net"></div>
+                        </div>
+                        <div class="goal-bottom">
+                            <div class="goal-net"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right stand with digital display -->
+                <div class="stand stand-right">
+                    <div class="stand-structure">
+                        <div class="stand-overlay"></div>
+                        <div class="stand-crowd"></div>
+                        <div class="stand-lights"></div>
+                    </div>
+                    <div class="stand-screen">
+                        <div class="screen-content screen-content-right">
+                            <!-- First set of content -->
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player3.jpg" alt="Player 3" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="tournament/cup.png" alt="Cup" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player2.jpg" alt="Player 2" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player1.jpg" alt="Player 1" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player3.jpg" alt="Player 3" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player2.jpg" alt="Player 2" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player1.jpg" alt="Player 1" class="face-left">
+                            </div>
+
+                            <!-- Duplicate content for seamless scrolling -->
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player3.jpg" alt="Player 3" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="tournament/cup.png" alt="Cup" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player2.jpg" alt="Player 2" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player1.jpg" alt="Player 1" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player3.jpg" alt="Player 3" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player2.jpg" alt="Player 2" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="assets/logo.png" alt="Logo" class="face-left">
+                            </div>
+                            <div class="content-item">
+                                <img src="players/player1.jpg" alt="Player 1" class="face-left">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom crowd below field -->
+            <div class="crowd-bottom">
+                <div class="flash1"></div>
+                <div class="flash2"></div>
+                <div class="flash3"></div>
+                <div class="flash4"></div>
+                <div class="flash5"></div>
+            </div>
+        </div>
+
+        <!-- End Screen -->
+        <div id="end-screen" class="screen" style="display: none;">
+            <div class="confetti-container"></div>
+            <div class="end-screen-decoration top-left"></div>
+            <div class="end-screen-decoration top-right"></div>
+            <div class="end-screen-decoration bottom-left"></div>
+            <div class="end-screen-decoration bottom-right"></div>
+
+            <h1>Game Over</h1>
+            <div id="winner-display" class="winner-display">
+                <div id="winner-flag" class="winner-flag"></div>
+                <h2 id="winner-text">فاز الاعب 1</h2>
+            </div>
+            <div id="final-score" class="final-score">5 - 3</div>
+            <button id="play-again" class="button">ألعب مجددا</button>
+        </div>
+    </div>
+
+    <script src="2d-ball.js"></script>
+    <script src="phaser-game.js"></script>
+    <script src="visual-effects.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
+
+
+

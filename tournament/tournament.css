@@ -1,0 +1,740 @@
+/* Tournament Styles */
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #1a1a2e;
+    color: white;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    width: 320px;
+    height: 570px;
+    position: relative;
+}
+
+.tournament-container {
+    width: 320px;
+    height: 570px;
+    position: relative;
+    overflow: hidden;
+    background-color: #1a1a2e;
+}
+
+.bracket-overlay-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 70px); /* Leave space for navigation */
+    z-index: 1;
+    overflow-x: auto; /* Enable horizontal scrolling */
+    overflow-y: hidden;
+    /* Customize scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: #4a90e2 #1a1a2e;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Custom scrollbar styling for WebKit browsers */
+.bracket-overlay-container::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+
+.bracket-overlay-container::-webkit-scrollbar-track {
+    background: #1a1a2e;
+}
+
+.bracket-overlay-container::-webkit-scrollbar-thumb {
+    background-color: #4a90e2;
+    border-radius: 10px;
+    border: 2px solid #1a1a2e;
+}
+
+.bracket-sides-container {
+    position: relative;
+    width: 180%; /* Slightly narrower for better view */
+    min-height: 100%;
+    overflow: visible;
+    display: flex;
+}
+
+.bracket-view {
+    position: relative;
+    width: 100%;
+    min-height: 550px; /* Ensure enough height for all bracket elements */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 30px; /* Add space for the header */
+}
+
+.bracket-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    opacity: 0.15; /* Reduced opacity to make bracket lines more visible */
+}
+
+.bracket-left-side, .bracket-right-side {
+    position: relative; /* Changed from absolute to relative */
+    width: 50%;
+    height: 100%;
+    z-index: 2;
+}
+
+.bracket-left-side {
+    left: 0;
+}
+
+.bracket-right-side {
+    right: 0;
+}
+
+/* Group styling - Optimized positioning to fit better on screen */
+.groupA, .groupB, .groupC, .groupD {
+    position: absolute;
+    width: 35%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.groupA {
+    top: 10%;
+    left: 12%;
+}
+
+.groupB {
+    top: 55%;
+    left: 12%;
+}
+
+.groupC {
+    top: 10%;
+    right: 12%;
+}
+
+.groupD {
+    top: 55%;
+    right: 12%;
+}
+
+/* Team overlay styling - More compact for better fit */
+.team-overlay {
+    display: flex;
+    align-items: center;
+    margin: 2px 0;
+    padding: 3px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    width: 90%;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.team-overlay:hover {
+    transform: scale(1.05);
+    background-color: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+}
+
+.team-flag {
+    width: 20px;
+    height: 15px;
+    background-size: cover;
+    background-position: center;
+    margin-right: 5px;
+    border-radius: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.team-name {
+    font-size: 10px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    flex-grow: 1;
+    text-align: center;
+}
+
+/* Right side team layout */
+.bracket-right-side .team-overlay {
+    flex-direction: row-reverse;
+}
+
+.bracket-right-side .team-flag {
+    margin-right: 0;
+    margin-left: 5px;
+}
+
+.tournament-nav {
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    z-index: 10;
+    background-color: rgba(26, 26, 46, 0.9);
+    padding: 8px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tournament-button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 5px;
+    background-color: #4a90e2;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.tournament-button:hover {
+    background-color: #2a75d0;
+    transform: scale(1.05);
+}
+
+.tournament-button:active {
+    transform: scale(0.98);
+}
+
+/* Quarter-finals styles */
+.quarter-final {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+}
+
+.left-Bracket-quarter, .right-Bracket-quarter {
+    position: absolute;
+    width: 50%;
+    height: 100%;
+}
+
+.left-Bracket-quarter {
+    left: 0;
+}
+
+.right-Bracket-quarter {
+    right: 0;
+}
+
+.left-match-1, .left-match-2, .right-match-1, .right-match-2 {
+    position: absolute;
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+}
+
+.left-match-1 {
+    top: 20%;
+    left: 12%;
+}
+
+.left-match-2 {
+    top: 65%;
+    left: 12%;
+}
+
+.right-match-1 {
+    top: 20%;
+    right: 12%;
+}
+
+.right-match-2 {
+    top: 65%;
+    right: 12%;
+}
+
+.left-match-1-team-1, .left-match-1-team-2, .left-match-2-team-1, .left-match-2-team-2,
+.right-match-1-team-1, .right-match-1-team-2, .right-match-2-team-1, .right-match-2-team-2 {
+    display: flex;
+    align-items: center;
+    margin: 3px 0;
+    padding: 4px;
+    border-radius: 4px;
+    background-color: rgba(50, 50, 70, 0.7);
+    transition: all 0.3s ease;
+}
+
+.left-match-1-team-1-flag, .left-match-1-team-2-flag, .left-match-2-team-1-flag, .left-match-2-team-2-flag,
+.right-match-1-team-1-flag, .right-match-1-team-2-flag, .right-match-2-team-1-flag, .right-match-2-team-2-flag {
+    width: 20px;
+    height: 15px;
+    margin-right: 5px;
+}
+
+.left-match-1-team-1-flag img, .left-match-1-team-2-flag img, .left-match-2-team-1-flag img, .left-match-2-team-2-flag img,
+.right-match-1-team-1-flag img, .right-match-1-team-2-flag img, .right-match-2-team-1-flag img, .right-match-2-team-2-flag img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.left-match-1-team-1-name, .left-match-1-team-2-name, .left-match-2-team-1-name, .left-match-2-team-2-name,
+.right-match-1-team-1-name, .right-match-1-team-2-name, .right-match-2-team-1-name, .right-match-2-team-2-name {
+    font-size: 10px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Semi-finals styles */
+.semi-finals {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 6;
+}
+
+.left-Bracket-semi, .right-Bracket-semi {
+    position: absolute;
+    width: 50%;
+    height: 100%;
+}
+
+.left-Bracket-semi {
+    left: 0;
+}
+
+.right-Bracket-semi {
+    right: 0;
+}
+
+/* Finals styles */
+.final {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 7;
+}
+
+.final-progression {
+    position: absolute;
+    top: 40%;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.left-Bracket-final, .right-Bracket-final {
+    padding: 8px;
+    margin: 0 8px;
+    background-color: rgba(70, 70, 100, 0.8);
+    border-radius: 6px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Winner styling */
+.player-team {
+    border: 1px solid gold;
+    box-shadow: 0 0 5px rgba(255, 215, 0, 0.7);
+}
+
+.winner {
+    background-color: rgba(60, 180, 75, 0.7);
+    transform: scale(1.05);
+}
+
+/* Animation for flag copies */
+@keyframes pulsate {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 0.9;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Result message */
+.result-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 12px 20px;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    z-index: 100;
+    animation: fadeInOut 5s forwards;
+}
+
+.result-message.win {
+    border: 2px solid gold;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+}
+
+.result-message.loss {
+    border: 2px solid crimson;
+    box-shadow: 0 0 20px rgba(220, 20, 60, 0.7);
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -60%);
+    }
+    10% {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+    80% {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* Scroll buttons for horizontal scrolling */
+.scroll-buttons {
+    position: absolute;
+    left: 50%;
+    bottom: 65px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 50;
+}
+
+.scroll-left-btn, .scroll-right-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: rgba(74, 144, 226, 0.7);
+    border: none;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.scroll-left-btn:hover, .scroll-right-btn:hover {
+    background-color: rgba(74, 144, 226, 0.9);
+    transform: scale(1.1);
+}
+
+/* Center tournament header */
+.tournament-header {
+    text-align: center;
+    padding: 6px 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background-color: rgba(26, 26, 46, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Additional stages (knockout phases) on the right side */
+.knockout-stages {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* Media queries for responsive design */
+@media (max-height: 600px) {
+    .tournament-container {
+        transform: scale(0.95);
+    }
+}
+
+/* New styles for bracket connection lines */
+.bracket-connection-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* Group connectors */
+.group-connectors {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+/* Connection lines styling */
+.connector-line {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.3);
+    z-index: 1;
+}
+
+/* Horizontal connector lines */
+.horizontal-line {
+    height: 1px;
+}
+
+/* Vertical connector lines */
+.vertical-line {
+    width: 1px;
+}
+
+/* Group A connectors */
+.group-a-connectors .horizontal-line-1 {
+    top: 15%;
+    left: 50%;
+    width: 15%;
+}
+
+.group-a-connectors .horizontal-line-2 {
+    top: 22%;
+    left: 50%;
+    width: 15%;
+}
+
+.group-a-connectors .vertical-line {
+    top: 15%;
+    left: 65%;
+    height: 7%;
+}
+
+/* Group B connectors */
+.group-b-connectors .horizontal-line-1 {
+    top: 60%;
+    left: 50%;
+    width: 15%;
+}
+
+.group-b-connectors .horizontal-line-2 {
+    top: 67%;
+    left: 50%;
+    width: 15%;
+}
+
+.group-b-connectors .vertical-line {
+    top: 60%;
+    left: 65%;
+    height: 7%;
+}
+
+/* Group C connectors */
+.group-c-connectors .horizontal-line-1 {
+    top: 15%;
+    right: 50%;
+    width: 15%;
+}
+
+.group-c-connectors .horizontal-line-2 {
+    top: 22%;
+    right: 50%;
+    width: 15%;
+}
+
+.group-c-connectors .vertical-line {
+    top: 15%;
+    right: 65%;
+    height: 7%;
+}
+
+/* Group D connectors */
+.group-d-connectors .horizontal-line-1 {
+    top: 60%;
+    right: 50%;
+    width: 15%;
+}
+
+.group-d-connectors .horizontal-line-2 {
+    top: 67%;
+    right: 50%;
+    width: 15%;
+}
+
+.group-d-connectors .vertical-line {
+    top: 60%;
+    right: 65%;
+    height: 7%;
+}
+
+/* Quarter final connectors */
+.quarter-connectors .vertical-line-left {
+    top: 30%;
+    left: 30%;
+    height: 25%;
+}
+
+.quarter-connectors .vertical-line-right {
+    top: 30%;
+    right: 30%;
+    height: 25%;
+}
+
+.quarter-connectors .horizontal-line-left {
+    top: 55%;
+    left: 15%;
+    width: 15%;
+}
+
+.quarter-connectors .horizontal-line-right {
+    top: 55%;
+    right: 15%;
+    width: 15%;
+}
+
+/* Style improvements for the bracket */
+.bracket-view {
+    padding-top: 30px; /* Add space for the header */
+}
+
+/* Enhance the tournament header */
+.tournament-header h1 {
+    font-size: 16px;
+    margin: 0;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px rgba(74, 144, 226, 0.7);
+}
+
+/* More visible indicator for player's team */
+.player-team {
+    position: relative;
+    border: 1px solid gold;
+    box-shadow: 0 0 5px rgba(255, 215, 0, 0.7);
+}
+
+.player-team::after {
+    content: "★";
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: gold;
+    font-size: 10px;
+}
+
+/* Bracket match highlight */
+.current-match {
+    animation: highlight-pulse 2s infinite;
+}
+
+@keyframes highlight-pulse {
+    0% {
+        box-shadow: 0 0 3px rgba(74, 144, 226, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 8px rgba(74, 144, 226, 1);
+    }
+    100% {
+        box-shadow: 0 0 3px rgba(74, 144, 226, 0.7);
+}
+}
+
+/* Clear stage indicators */
+.stage-label {
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    z-index: 20;
+}
+
+/* Tournament progress indicator */
+.tournament-progress {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    z-index: 40;
+}
+
+.progress-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.progress-dot.active {
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
+}
+
+/* Make horizontal scrolling smoother */
+.bracket-overlay-container {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Group labels styling */
+.group-label {
+    position: absolute;
+    font-size: 10px;
+    font-weight: bold;
+    color: white;
+    background-color: rgba(74, 144, 226, 0.6);
+    padding: 2px 6px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    z-index: 10;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+    letter-spacing: 0.5px;
+}
+
+/* Knockout stage labels */
+.knockout-stage-label {
+    position: absolute;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 10;
+    background-color: rgba(26, 26, 46, 0.7);
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+}
+
+/* Compact the bracket for better visibility */
+.bracket-sides-container {
+    width: 170%; /* Even more compact for better view */
+}
+
+

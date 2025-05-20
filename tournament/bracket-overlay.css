@@ -1,0 +1,1220 @@
+/* Bracket Overlay CSS */
+
+/* Tournament viewport - fixed size matching the game container */
+.tournament-container {
+    width: 320px;
+    height: 570px;
+    overflow: hidden;
+    position: relative;
+    
+}
+
+/* Scrollable bracket container */
+.bracket-overlay-container {
+    position: relative;
+    width: 1000px; /* Wider than viewport to allow scrolling */
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    cursor: grab;
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+}
+
+.bracket-overlay-container:active {
+    cursor: grabbing;
+}
+
+.bracket-background {
+    width: 1000px; /* Fixed width to match container */
+    height: auto;
+    display: block;
+    filter: brightness(0.7) contrast(1.2);
+}
+
+/* Team flag overlays */
+.team-overlay {
+    position: relative;  /* Changed from absolute to relative */
+    display: flex;
+    align-items: center;
+    z-index: 15;
+    gap: 10px;  /* Added margin for spacing */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.team-overlay:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Keep absolute positioning only for tournament progression teams */
+.tournament-progression .team-overlay {
+    position: absolute;
+}
+
+.team-flag {
+    width: 30px;
+    height: 30px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 2px;
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.team-name {
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Group A - Pink (Left Side) */
+
+/* Removed duplicate .bracket-left-side declaration */
+.groupA{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.groupB{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+/* Group C and D styles */
+
+/* Bracket right side container */
+.bracket-left-side {
+    display: flex;
+    flex-direction: column;
+    gap: 27px;
+    position: absolute;
+    top: 114px;
+    left: 55px;
+}
+.group-a-1{
+    top:6px;
+    left:3px
+}
+.group-a-2{
+    top:5px;
+    left: 3px;
+}
+.group-a-3{
+    top:-2px;
+    left:4px;
+}
+.group-a-4{
+    top:-4px;
+    left:3px;
+}
+.groupA, .groupB {
+    display: flex;
+    flex-direction: column;
+    gap: 19px;
+}
+.group-b-1{
+    top:8px;
+    left:4px;
+}
+.group-b-2{
+    top:6px;
+    left: 3px;
+}
+.group-b-3{
+    top:2px;
+    left: 3px;
+}
+.group-b-4{
+    top:1px;
+    left: 3px;
+}
+.bracket-right-side {
+    display: flex;
+    flex-direction: column;
+    gap: 27px;
+    position: absolute;
+    top: 114px;
+    right: 55px;
+}
+.group-d-1{
+    top:9px;
+}
+.group-d-2{
+    top:6px;
+    left: 7px;
+}
+.group-d-3{
+    top:1px;
+}
+.groupC, .groupD {
+    display: flex;
+    flex-direction: column;
+    gap: 19px;
+}
+.group-c-1{
+    top:7px;
+}
+.group-c-2{
+    top:6px;
+    right: 3px;
+}
+.group-c-4{
+    top:-3px;
+}
+
+/* Right side flag positioning */
+.bracket-right-side .team-flag {
+ /* Move flag to the beginning */
+    margin-right: 5px;
+}
+/* Right side tournament progression teams */
+.right-progression .team-flag {
+    order: -1; /* Move flag to the beginning */
+    margin-right: 5px;
+}
+
+/* Bracket navigation buttons */
+.bracket-nav-buttons {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.tournament-button { 
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.tournament-button:hover {
+    background-color: #0b7dda;
+}
+
+.tournament-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* Winner copy styling */
+.winner-copy {
+    position: absolute;
+    z-index: 20;
+    top: 0;
+    left:20%;
+}
+
+/* Quarter-final container */
+.quarter-final {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 30;
+    pointer-events: none;
+}
+
+/* Quarter-final matches container */
+.quarter-final-matches {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* Match containers */
+.match-container {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* Position each match container - adjusted to be visible in the tournament view */
+.match-1 {
+    top: 100px;
+    left: 20px;
+}
+
+.match-2 {
+    top: 180px;
+    left: 20px;
+}
+
+.match-3 {
+    top: 260px;
+    right: 0px;
+}
+
+.match-4 {
+    top: 350px;
+    gap:60px;
+    right:180px;
+}
+
+/* Base team styling */
+.team-copy {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 3px;
+    border-radius: 3px;
+    width: 90px;
+    height: 25px;
+    pointer-events: none;
+}
+
+.team-copy .team-flag {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+}
+
+.team-copy .team-name {
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* Player team styling */
+.player-team {
+    background-color: rgba(0, 100, 0, 0.7);
+    border: 1px solid gold;
+}
+
+/* Winner styling */
+.winner {
+    border: 2px solid gold;
+    background-color: rgba(50, 50, 0, 0.7);
+}
+
+/* Semi-final container */
+.semi-final {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 30;
+    pointer-events: none;
+}
+
+/* Semi-final matches container */
+.semi-final-matches {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* Position semi-final matches */
+.semi-match-1 {
+    top: 250px;
+    left: 120px;
+}
+
+.semi-match-2 {
+    top: 250px;
+    right: 120px;
+}
+
+/* Final match position */
+.final-match {
+    top: 320px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Position matches within bracket sides */
+.bracket-left-side .match-container,
+.bracket-right-side .match-container {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+/* Specific positioning for each match within bracket sides */
+.bracket-left-side .match-1 {
+    margin-top: 30px;
+}
+
+.bracket-left-side .match-2 {
+    margin-top: 20px;
+}
+
+.bracket-right-side .match-3 {
+    margin-top: 30px;
+}
+
+.bracket-right-side .match-4 {
+    margin-top: 20px;
+}
+
+/* Team styling within bracket sides */
+.bracket-right-side .team-copy {
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+}
+
+.bracket-left-side .team-copy {
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+/* Make sure team flags and names are visible */
+.team-copy .team-flag {
+    width: 25px;
+    height: 25px;
+    min-width: 25px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 2px;
+}
+
+.team-copy .team-name {
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* Right side team styling - FIXED */
+.right-side-match .team-copy {
+    flex-direction: row-reverse !important;
+}
+
+/* Position each match container - adjusted for left and right sides */
+.match-1 {
+    top: 100px;
+    left: 20px;
+}
+
+.match-2 {
+    top: 180px;
+    left: 20px;
+}
+
+.match-3 {
+    top: 100px;
+    right: 20px;
+}
+
+.match-4 {
+    top: 180px;
+    right: 20px;
+}
+
+/* Right side match container alignment */
+.right-side-match {
+    align-items: flex-end;
+}
+
+/* Tournament bracket styling */
+
+/* Team element styling */
+.team-element {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 5px;
+    border-radius: 3px;
+    margin: 5px 0;
+    width: 100px;
+    height: 25px;
+}
+
+/* Right side team styling */
+.right-side-team {
+    flex-direction: row-reverse;
+    margin-left: auto;
+}
+
+/* Team flag styling */
+.team-flag {
+    width: 20px;
+    height: 20px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 2px;
+}
+
+/* Team name styling */
+.team-name {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Quarter-final match styling */
+.quarter-match {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    position: absolute;
+    width: 110px;
+}
+
+/* Position quarter-final matches on left side */
+.quarter-match-1 {
+    top: 80px;
+    left: 10px;
+}
+
+.quarter-match-2 {
+    top: 180px;
+    left: 10px;
+}
+
+/* Position quarter-final matches on right side */
+.quarter-match-3 {
+    top: 80px;
+    right: 10px;
+}
+
+.quarter-match-4 {
+    top: 180px;
+    right: 10px;
+}
+
+/* Semi-final match styling */
+.semi-match {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    position: absolute;
+    width: 110px;
+}
+
+/* Position semi-final matches */
+.semi-match-1 {
+    top: 130px;
+    left: 70px;
+}
+
+.semi-match-2 {
+    top: 130px;
+    right: 70px;
+}
+
+/* Final match styling */
+.final-match {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    position: absolute;
+    top: 130px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 110px;
+    z-index: 10;
+}
+
+/* Winner styling */
+.winner {
+    border: 2px solid gold;
+    background-color: rgba(50, 50, 0, 0.7);
+}
+
+/* Player team styling */
+.player-team {
+    border: 1px solid #00ff00;
+    background-color: rgba(0, 50, 0, 0.7);
+}
+
+/* Restart button styling */
+#restart-tournament-btn {
+    background-color: #ff5555;
+}
+
+/* Champion celebration overlay */
+.champion-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.champion-container {
+    background-color: #1a1a1a;
+    border: 3px solid gold;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    max-width: 80%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+
+.champion-flag {
+    width: 100px;
+    height: 60px;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 0 auto 10px;
+}
+
+.champion-name {
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 5px;
+}
+
+.champion-title {
+    font-size: 36px;
+    font-weight: bold;
+    color: gold;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+}
+
+/* Winner styling */
+.team-element.winner {
+    background-color: rgba(0, 255, 0, 0.2);
+    border: 2px solid #00ff00;
+}
+
+.player-team {
+    background-color: rgba(0, 100, 255, 0.2);
+    border: 2px solid #0064ff;
+}
+
+/* Bracket connection lines */
+.bracket-left-side::after,
+.bracket-right-side::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 20px;
+    height: 2px;
+    background-color: #fff;
+}
+
+.bracket-left-side::after {
+    right: 0;
+}
+
+.bracket-right-side::after {
+    left: 0;
+}
+
+/* Improve bracket navigation */
+.bracket-sides-container {
+    transition: transform 0.3s ease-in-out;
+}
+
+.side-dot {
+    cursor: pointer;
+    width: 10px;
+    height: 10px;
+    background-color: #555;
+    border-radius: 50%;
+    margin: 0 5px;
+}
+
+.side-dot.active {
+    background-color: #fff;
+}
+
+/* Group color coding */
+.groupA .team-overlay {
+    border-left: 3px solid rgba(255, 105, 180, 0.8); /* Pink */
+}
+
+.groupB .team-overlay {
+    border-left: 3px solid rgba(138, 43, 226, 0.8); /* Purple */
+}
+
+.groupC .team-overlay {
+    border-right: 3px solid rgba(30, 144, 255, 0.8); /* Blue */
+}
+
+.groupD .team-overlay {
+    border-right: 3px solid rgba(255, 140, 0, 0.8); /* Orange */
+}
+
+/* Match styling */
+.left-match-1-team-1, .left-match-1-team-2, .left-match-2-team-1, .left-match-2-team-2,
+.right-match-1-team-1, .right-match-1-team-2, .right-match-2-team-1, .right-match-2-team-2 {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced bracket lines */
+.connector-line {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.1));
+}
+
+.vertical-line {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.1));
+}
+
+/* Visual indicators for team status */
+.team-overlay.eliminated {
+    opacity: 0.5;
+    filter: grayscale(80%);
+}
+
+.team-overlay.qualified {
+    border-color: rgba(60, 179, 113, 0.8); /* Green */
+}
+
+/* Semi-final and final styling */
+.left-Bracket-semi, .right-Bracket-semi {
+    position: absolute;
+    top: 35%;
+}
+
+.left-Bracket-semi {
+    left: 25%;
+}
+
+.right-Bracket-semi {
+    right: 25%;
+}
+
+.final-progression {
+    background-color: rgba(30, 30, 50, 0.8);
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.left-Bracket-final, .right-Bracket-final {
+    margin: 0 20px;
+    position: relative;
+}
+
+/* Trophy icon for winner */
+.tournament-winner::after {
+    content: "🏆";
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px;
+    filter: drop-shadow(0 0 5px gold);
+}
+
+/* Animation for current match highlight */
+@keyframes match-highlight {
+    0% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+    50% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+    100% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+}
+
+.next-match .left-match-1-team-1,
+.next-match .left-match-1-team-2,
+.next-match .right-match-1-team-1,
+.next-match .right-match-1-team-2 {
+    animation: match-highlight 2s infinite;
+}
+
+/* Clear stage indicators */
+.stage-label {
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    z-index: 20;
+}
+
+/* Tournament progress indicator */
+.tournament-progress {
+    position: absolute;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 5px;
+    z-index: 40;
+}
+
+.progress-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.progress-dot.active {
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+}
+
+/* Make horizontal scrolling smoother */
+.bracket-overlay-container {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Bracket Overlay Styles */
+
+.bracket-container {
+    position: relative;
+    width: 100%;
+    height: calc(100% - 90px); /* Adjusted to leave space for controls */
+}
+
+/* Bracket Background */
+.bracket-bg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: url('../assets/images/bracket-bg.png');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.15;
+    z-index: 1;
+}
+
+/* Bracket Structure */
+.bracket-structure {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+/* Group Stage */
+.group-stage {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.group {
+    position: absolute;
+    width: 35%; /* Reduced width for better visibility */
+    text-align: center;
+}
+
+.group-a {
+    top: 10%;
+    left: 10%;
+}
+
+.group-b {
+    top: 55%;
+    left: 10%;
+}
+
+.group-c {
+    top: 10%;
+    right: 10%;
+}
+
+.group-d {
+    top: 55%;
+    right: 10%;
+}
+
+.group-header {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #ffffff;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+    text-transform: uppercase;
+}
+
+.group-teams {
+    display: flex;
+    flex-direction: column;
+    gap: 2px; /* Reduced gap */
+}
+
+.team-item {
+    display: flex;
+    align-items: center;
+    padding: 3px; /* Reduced padding */
+    background-color: rgba(50, 50, 70, 0.7);
+    border-radius: 3px; /* Reduced radius */
+    overflow: hidden;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.team-item:hover {
+    transform: scale(1.03);
+    background-color: rgba(60, 60, 80, 0.8);
+    cursor: pointer;
+}
+
+.team-flag {
+    width: 18px; /* Smaller flag */
+    height: 12px; /* Smaller flag */
+    margin-right: 4px; /* Reduced margin */
+    object-fit: cover;
+    border-radius: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.team-name {
+    font-size: 9px; /* Smaller text */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-grow: 1;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Quarter Finals Stage */
+.quarter-finals {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+}
+
+.quarter-match {
+    position: absolute;
+    width: 30%; /* Reduced width */
+    display: flex;
+    flex-direction: column;
+    gap: 3px; /* Reduced gap */
+}
+
+.quarter-left-1 {
+    top: 20%;
+    left: 38%;
+}
+
+.quarter-left-2 {
+    top: 65%;
+    left: 38%;
+}
+
+.quarter-right-1 {
+    top: 20%;
+    right: 38%;
+}
+
+.quarter-right-2 {
+    top: 65%;
+    right: 38%;
+}
+
+/* Semi Finals Stage */
+.semi-finals {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 4;
+}
+
+.semi-match {
+    position: absolute;
+    width: 25%; /* Reduced width */
+    display: flex;
+    flex-direction: column;
+    gap: 3px; /* Reduced gap */
+}
+
+.semi-left {
+    top: 42.5%;
+    left: 38%;
+}
+
+.semi-right {
+    top: 42.5%;
+    right: 38%;
+}
+
+/* Final Match */
+.final-match {
+    position: absolute;
+    top: 42.5%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24%; /* Reduced width */
+    display: flex;
+    flex-direction: column;
+    gap: 3px; /* Reduced gap */
+    z-index: 5;
+}
+
+/* Connection Lines */
+.connection-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0; /* Behind teams but visible */
+}
+
+.line {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.horizontal-line {
+    height: 1px; /* Thinner lines */
+}
+
+.vertical-line {
+    width: 1px; /* Thinner lines */
+}
+
+/* Group A to Quarter Left 1 */
+.group-a-to-quarter-left-1-h1 {
+    top: 17.5%;
+    left: 45%;
+    width: 3%;
+}
+
+.group-a-to-quarter-left-1-v {
+    top: 17.5%;
+    left: 45%;
+    height: 5%;
+}
+
+/* Group B to Quarter Left 2 */
+.group-b-to-quarter-left-2-h1 {
+    top: 62.5%;
+    left: 45%;
+    width: 3%;
+}
+
+.group-b-to-quarter-left-2-v {
+    top: 62.5%;
+    left: 45%;
+    height: 5%;
+}
+
+/* Group C to Quarter Right 1 */
+.group-c-to-quarter-right-1-h1 {
+    top: 17.5%;
+    right: 45%;
+    width: 3%;
+}
+
+.group-c-to-quarter-right-1-v {
+    top: 17.5%;
+    right: 45%;
+    height: 5%;
+}
+
+/* Group D to Quarter Right 2 */
+.group-d-to-quarter-right-2-h1 {
+    top: 62.5%;
+    right: 45%;
+    width: 3%;
+}
+
+.group-d-to-quarter-right-2-v {
+    top: 62.5%;
+    right: 45%;
+    height: 5%;
+}
+
+/* Quarter Left to Semi Left */
+.quarter-left-to-semi-left-v1 {
+    top: 25%;
+    left: 55%;
+    height: 19%;
+}
+
+.quarter-left-to-semi-left-h1 {
+    top: 44%;
+    left: 50%;
+    width: 5%;
+}
+
+.quarter-left-to-semi-left-v2 {
+    top: 70%;
+    left: 55%;
+    height: 26%;
+}
+
+/* Quarter Right to Semi Right */
+.quarter-right-to-semi-right-v1 {
+    top: 25%;
+    right: 55%;
+    height: 19%;
+}
+
+.quarter-right-to-semi-right-h1 {
+    top: 44%;
+    right: 50%;
+    width: 5%;
+}
+
+.quarter-right-to-semi-right-v2 {
+    top: 70%;
+    right: 55%;
+    height: 26%;
+}
+
+/* Semi Left to Final */
+.semi-left-to-final-h {
+    top: 44%;
+    left: 51%;
+    width: 10%;
+}
+
+/* Semi Right to Final */
+.semi-right-to-final-h {
+    top: 44%;
+    right: 51%;
+    width: 10%;
+}
+
+
+
+/* Winner */
+.winner {
+    background-color: rgba(60, 180, 75, 0.6);
+    transform: scale(1.05);
+}
+
+/* Player Team Highlight */
+.player-team {
+    border: 1px solid gold;
+    box-shadow: 0 0 5px rgba(255, 215, 0, 0.6);
+}
+
+/* Match Animation */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 2px rgba(74, 144, 226, 0.6);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 0 5px rgba(74, 144, 226, 0.8);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 2px rgba(74, 144, 226, 0.6);
+    }
+}
+
+.active-match {
+    animation: pulse 2s infinite;
+}
+
+/* Stage labels */
+.stage-label {
+    position: absolute;
+    font-size: 10px;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+    z-index: 10;
+}
+
+.groups-label {
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.quarters-label {
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.semis-label {
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.final-label {
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Navigation controls */
+.bracket-nav {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 5px;
+    z-index: 50;
+}
+
+.bracket-nav-btn {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 3px;
+    background-color: rgba(74, 144, 226, 0.7);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.bracket-nav-btn:hover {
+    background-color: rgba(74, 144, 226, 0.9);
+    transform: scale(1.05);
+}
+
+.bracket-nav-btn.active {
+    background-color: rgba(60, 180, 75, 0.7);
+}
+
+/* Progress indicator */
+.bracket-progress {
+    position: absolute;
+    bottom: 35px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 3px;
+    z-index: 49;
+}
+
+.progress-point {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.progress-point.active {
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 3px rgba(255, 255, 255, 0.7);
+}
+
+

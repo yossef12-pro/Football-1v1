@@ -1,0 +1,2955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Tournament</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="tournament.css">
+    <!-- Preload audio to avoid permission issues -->
+    <audio id="tournament-theme" preload="auto" src="../audio/world cup theme.mp3" loop></audio>
+    <script>
+        // Initialize audio context on user interaction to handle autoplay restrictions
+        let audioInitialized = false;
+        
+        function initAudio() {
+            if (audioInitialized) return;
+            
+            const tournamentTheme = document.getElementById('tournament-theme');
+            
+            // Lower volume
+            tournamentTheme.volume = 0.3;
+            
+            // Flag to avoid repeated initialization
+            audioInitialized = true;
+        }
+        
+        // Initialize audio on first user interaction
+        document.addEventListener('click', function audioInitHandler() {
+            initAudio();
+            // Remove the event listener after first interaction
+            document.removeEventListener('click', audioInitHandler);
+        }, { once: true });
+        
+        // Play tournament theme with user interaction check
+        function playTournamentTheme() {
+            const tournamentTheme = document.getElementById('tournament-theme');
+            if (!tournamentTheme) return;
+            
+            // Check if audio context is initialized
+            if (!audioInitialized) {
+                initAudio();
+            }
+            
+            // Play the theme with error handling
+            if (tournamentTheme.paused) {
+                const playPromise = tournamentTheme.play();
+                
+                // Handle play promise to avoid uncaught promise errors
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Audio play error:", error);
+                    });
+                }
+            }
+        }
+        
+        // Stop tournament theme
+        function stopTournamentTheme() {
+            const tournamentTheme = document.getElementById('tournament-theme');
+            if (!tournamentTheme) return;
+            
+            tournamentTheme.pause();
+        }
+        
+        // Add event listener when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if we should play audio after a reset
+            if (localStorage.getItem('playAudioAfterReset')) {
+                // Remove the flag
+                localStorage.removeItem('playAudioAfterReset');
+                
+                // Initialize and play audio immediately
+                initAudio();
+                playTournamentTheme();
+            }
+            
+            // Add click listener to buttons to ensure audio plays after interaction
+            document.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', function() {
+                    initAudio();
+                    playTournamentTheme();
+                });
+            });
+        });
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #222;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            width: 320px;
+            height: 570px;
+        }
+
+        /* Removed tournament container styling as it's now in tournament.css */
+
+        .tournament-header {
+            text-align: center;
+            padding: 6px 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            background-color: rgba(26, 26, 46, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tournament-header h1 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tournament-nav {
+            position: absolute;
+            bottom: 15px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            z-index: 10;
+            background-color: rgba(26, 26, 46, 0.8);
+            padding: 8px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tournament-button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4a90e2;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tournament-button:hover {
+            background-color: #2a75d0;
+            transform: scale(1.05);
+        }
+
+        /* Scrollable bracket container */
+        .bracket-scroll-container {
+            position: relative;
+            width: 100%;
+            height: calc(100% - 80px);
+            margin-top: 35px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Hide scrollbar but allow scrolling */
+        .bracket-scroll-container::-webkit-scrollbar {
+            height: 0;
+            width: 0;
+        }
+
+        /* Tournament bracket - much wider than screen */
+        .bracket-container {
+            position: relative;
+            width: 1200px; /* Much wider than screen (320px) */
+            height: 100%;
+            overflow: visible;
+        }
+
+        /* Groups */
+        .group {
+            position: absolute;
+            width: 100px;
+            z-index: 5;
+        }
+
+        .group-title {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-align: center;
+            background-color: rgba(255,255,255,0.1);
+            padding: 3px;
+            border-radius: 8px;
+        }
+
+        /* Specific group positioning - adjusted for wider view */
+        .group-a {
+            top: 50px;
+            left: 50px;
+        }
+
+        .group-b {
+            top: 270px;
+            left: 50px;
+        }
+
+        .group-c {
+            top: 50px;
+            right: 50px;
+        }
+
+        .group-d {
+            top: 270px;
+            right: 50px;
+        }
+
+        /* Team styling */
+        .team {
+            display: flex;
+            align-items: center;
+            background-color: rgba(0,0,0,0.4);
+            border-radius: 12px;
+            padding: 3px;
+            margin-bottom: 4px;
+            font-size: 10px;
+            position: relative;
+            transition: all 0.2s ease;
+            height: 20px;
+            overflow: hidden;
+        }
+
+        .team:hover {
+            transform: scale(1.05);
+            background-color: rgba(0,0,0,0.6);
+        }
+
+        .team.selected {
+            border: 1px solid gold;
+            box-shadow: 0 0 5px rgba(255,215,0,0.7);
+        }
+
+        .team-flag {
+            width: 18px;
+            height: 12px;
+            margin-right: 6px;
+            border-radius: 2px;
+            object-fit: cover;
+        }
+
+        /* Color coding for groups */
+        .group-a .team { 
+            background-color: rgba(255, 0, 128, 0.6); 
+        }
+        .group-b .team { 
+            background-color: rgba(128, 0, 255, 0.6); 
+        }
+        .group-c .team { 
+            background-color: rgba(0, 128, 255, 0.6); 
+        }
+        .group-d .team { 
+            background-color: rgba(255, 128, 0, 0.6); 
+        }
+
+        /* Knockout stages */
+        .knockout-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 4;
+        }
+        
+        /* Show all stages initially with placeholder styles */
+        .quarter-match, .semi-match, .final-container {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Placeholder slots for teams that aren't determined yet */
+        .team.placeholder {
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+        }
+        
+        .team.placeholder .team-flag {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .team.placeholder span {
+            color: transparent;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            width: 60%;
+            height: 8px;
+        }
+
+        /* Quarter finals */
+        .quarter-match {
+            position: absolute;
+            width: 110px;
+            z-index: 5;
+        }
+
+        .quarter-left-top {
+            top: 120px;
+            left: 200px;
+        }
+
+        .quarter-left-bottom {
+            top: 340px;
+            left: 200px;
+        }
+
+        .quarter-right-top {
+            top: 120px;
+            right: 200px;
+        }
+
+        .quarter-right-bottom {
+            top: 340px;
+            right: 200px;
+        }
+
+        /* Semi finals */
+        .semi-match {
+            position: absolute;
+            width: 110px;
+            z-index: 6;
+        }
+
+        .semi-left {
+            top: 230px;
+            left: 350px;
+        }
+
+        .semi-right {
+            top: 230px;
+            right: 350px;
+        }
+
+        /* Final */
+        .final-match {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            z-index: 7;
+            text-align: center;
+        }
+
+        .final-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: gold;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+
+        .vs-text {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 6px 0;
+            color: white;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+        }
+
+        /* Trophy - positioned relative to the final match */
+        .trophy {
+            width: 80px;
+            height: 200px;
+            margin-bottom: 260px;
+            background-image: url('cup.png'); /* Updated to use cup.png from tournament directory */
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+        }
+        
+        /* Final container with cup and match */
+        .final-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 7;
+        }
+        
+        /* Final match styling */
+        .final-match {
+            width: 120px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        /* Stage labels */
+        .stage-label {
+            position: absolute;
+            font-size: 10px;
+            text-transform: uppercase;
+            background-color: rgba(74, 144, 226, 0.6);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            z-index: 10;
+        }
+
+        .groups-label {
+            top: 25px;
+            left: 100px;
+            transform: translateX(-50%);
+        }
+
+        .quarters-label {
+            top: 90px;
+            left: 22%;
+            transform: translateX(-50%);
+        }
+
+        .semis-label {
+            top: 200px;
+            left: 34%;
+            transform: translateX(-50%);
+        }
+
+        /* Connection lines */
+        .connector {
+            position: absolute;
+            background-color: rgba(255,255,255,0.3);
+            z-index: 3;
+        }
+
+        .horizontal-line {
+            height: 1px;
+        }
+
+        .vertical-line {
+            width: 1px;
+        }
+
+        /* Field background */
+        .field-bg {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 100px;
+            background-image: url('field.png');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 1;
+            opacity: 0.6;
+        }
+
+        /* Progress dots */
+        .progress-dots {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: rgba(255,255,255,0.3);
+        }
+
+        .dot.active {
+            background-color: white;
+            box-shadow: 0 0 5px rgba(255,255,255,0.8);
+        }
+
+        /* Scroll buttons */
+        .scroll-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: rgba(74, 144, 226, 0.8);
+            color: white;
+            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 20;
+            border: none;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        .scroll-btn:hover {
+            background-color: rgba(74, 144, 226, 1);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .scroll-left {
+            left: 5px;
+        }
+
+        .scroll-right {
+            right: 5px;
+        }
+
+        /* Position indicators */
+        .position-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 3px;
+            z-index: 10;
+        }
+
+        .position-pip {
+            width: 20px;
+            height: 3px;
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 2px;
+        }
+
+        .position-pip.active {
+            background-color: rgba(255,255,255,0.8);
+        }
+
+        /* Stage navigation buttons */
+        .stage-navigation {
+            position: absolute;
+            top: 10px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            z-index: 15;
+            padding: 5px;
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+        
+        .stage-nav-button {
+            padding: 5px 10px;
+            background-color: rgba(74, 144, 226, 0.5);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .stage-nav-button:hover {
+            background-color: rgba(74, 144, 226, 0.8);
+            transform: scale(1.05);
+        }
+        
+        .stage-nav-button.active {
+            background-color: rgba(74, 144, 226, 1);
+            box-shadow: 0 0 5px rgba(74, 144, 226, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="tournament-container">
+        <div class="tournament-header">
+            <h1>World Cup</h1>
+        </div>
+        
+        
+        <!-- Scroll left button -->
+        <button class="scroll-btn scroll-left" id="scroll-left">←</button>
+        
+        <!-- Scrollable bracket container -->
+        <div class="bracket-scroll-container" id="bracket-scroll">
+            <div class="bracket-container">
+                <!-- Stage labels -->
+                <div class="stage-label groups-label">Group Stage</div>
+                <div class="stage-label quarters-label">Quarter Finals</div>
+                <div class="stage-label semis-label">Semi Finals</div>
+                
+                <!-- Football field background -->
+                <div class="field-bg"></div>
+                
+                <!-- Group A - Pink (Left Top) -->
+                <div class="group group-a">
+                    <div class="group-title">Group A</div>
+                    <div class="team">
+                        <img src="../flags/argentina.png" class="team-flag" alt="Argentina">
+                        <span>Argentina</span>
+                            </div>
+                    <div class="team">
+                        <img src="../flags/france.png" class="team-flag" alt="France">
+                        <span>France</span>
+                            </div>
+                    <div class="team">
+                        <img src="../flags/china.png" class="team-flag" alt="China">
+                        <span>China</span>
+                            </div>
+                    <div class="team">
+                        <img src="../flags/united-kingdom.png" class="team-flag" alt="UK">
+                        <span>United Kingdom</span>
+                            </div>
+                        </div>
+
+                <!-- Group B - Purple (Left Bottom) -->
+                <div class="group group-b">
+                    <div class="group-title">Group B</div>
+                    <div class="team">
+                        <img src="../flags/italy.png" class="team-flag" alt="Italy">
+                        <span>Italy</span>
+                            </div>
+                    <div class="team">
+                        <img src="../flags/england.png" class="team-flag" alt="England">
+                        <span>England</span>
+                            </div>
+                    <div class="team">
+                        <img src="../flags/SaudiArabia.png" class="team-flag" alt="Saudi Arabia">
+                        <span>Saudi Arabia</span>
+                            </div>
+                    <div class="team">
+                        <img src="../flags/belgium.png" class="team-flag" alt="Belgium">
+                        <span>Belgium</span>
+                        </div>
+                    </div>
+
+                <!-- Group C - Blue (Right Top) -->
+                <div class="group group-c">
+                    <div class="group-title">Group C</div>
+                    <div class="team">
+                        <img src="../flags/germany.png" class="team-flag" alt="Germany">
+                        <span>Germany</span>
+                            </div>
+                    <div class="team">
+                        <img src="../flags/portugal.png" class="team-flag" alt="Portugal">
+                        <span>Portugal</span>
+                            </div>
+                    <div class="team">
+                        <img src="../flags/palestine.png" class="team-flag" alt="Palestine">
+                        <span>Palestine</span>
+                            </div>
+                    <div class="team">
+                        <img src="../flags/egypt.png" class="team-flag" alt="Egypt">
+                        <span>Egypt</span>
+                            </div>
+                        </div>
+
+                <!-- Group D - Orange (Right Bottom) -->
+                <div class="group group-d">
+                    <div class="group-title">Group D</div>
+                    <div class="team">
+                        <img src="../flags/brazil-.png" class="team-flag" alt="Brazil">
+                        <span>Brazil</span>
+                            </div>
+                    <div class="team">
+                        <img src="../flags/argentina.png" class="team-flag" alt="Argentina">
+                        <span>Argentina</span>
+                            </div>
+                    <div class="team">
+                        <img src="../flags/japan.png" class="team-flag" alt="Japan">
+                        <span>Japan</span>
+                            </div>
+                    <div class="team">
+                        <img src="../flags/qatar.png" class="team-flag" alt="Qatar">
+                        <span>Qatar</span>
+                            </div>
+                        </div>
+                
+                <!-- Knockout stages -->
+                <div class="knockout-container">
+                    <!-- Quarter Finals -->
+                    <div class="quarter-match quarter-left-top">
+                        <div class="team placeholder" data-team="">
+                            <div class="team-flag"></div>
+                            <span></span>
+                        </div>
+                        <div class="team placeholder" data-team="">
+                            <div class="team-flag"></div>
+                            <span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="quarter-match quarter-left-bottom">
+                        <div class="team placeholder" data-team="">
+                            <div class="team-flag"></div>
+                            <span></span>
+                        </div>
+                        <div class="team placeholder" data-team="">
+                            <div class="team-flag"></div>
+                            <span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="quarter-match quarter-right-top">
+                        <div class="team placeholder" data-team="">
+                            <div class="team-flag"></div>
+                            <span></span>
+                        </div>
+                        <div class="team placeholder" data-team="">
+                            <div class="team-flag"></div>
+                            <span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="quarter-match quarter-right-bottom">
+                        <div class="team placeholder" data-team="">
+                            <div class="team-flag"></div>
+                            <span></span>
+                        </div>
+                        <div class="team placeholder" data-team="">
+                            <div class="team-flag"></div>
+                            <span></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Semi Finals -->
+                    <div class="semi-match semi-left">
+                        <div class="team placeholder" data-team="">
+                            <div class="team-flag"></div>
+                            <span></span>
+                        </div>
+                        <div class="team placeholder" data-team="">
+                            <div class="team-flag"></div>
+                            <span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="semi-match semi-right">
+                        <div class="team placeholder" data-team="">
+                            <div class="team-flag"></div>
+                            <span></span>
+                        </div>
+                        <div class="team placeholder" data-team="">
+                            <div class="team-flag"></div>
+                            <span></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Final Match -->
+                    <div class="final-container">
+                        <div class="trophy"></div>
+                        <div class="final-match">
+                            <div class="final-title">Final</div>
+                            <div class="team placeholder" data-team="">
+                                <div class="team-flag"></div>
+                                <span></span>
+                            </div>
+                            <div class="vs-text">VS</div>
+                            <div class="team placeholder" data-team="">
+                                <div class="team-flag"></div>
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connection lines -->
+                    <!-- Group A to Quarter Left Top -->
+                    <div class="connector horizontal-line" style="top: 75px; left: 150px; width: 50px;"></div>
+                    
+                    <!-- Group B to Quarter Left Bottom -->
+                    <div class="connector horizontal-line" style="top: 295px; left: 150px; width: 50px;"></div>
+                    
+                    <!-- Group C to Quarter Right Top -->
+                    <div class="connector horizontal-line" style="top: 75px; right: 150px; width: 50px;"></div>
+                    
+                    <!-- Group D to Quarter Right Bottom -->
+                    <div class="connector horizontal-line" style="top: 295px; right: 150px; width: 50px;"></div>
+                    
+                    <!-- Quarter Left Top to Semi Left -->
+                    <div class="connector vertical-line" style="top: 140px; left: 255px; height: 90px;"></div>
+                    
+                    <!-- Quarter Left Bottom to Semi Left -->
+                    <div class="connector vertical-line" style="top: 255px; left: 255px; height: 85px;"></div>
+                    
+                    <!-- Quarter Right Top to Semi Right -->
+                    <div class="connector vertical-line" style="top: 140px; right: 255px; height: 90px;"></div>
+                    
+                    <!-- Quarter Right Bottom to Semi Right -->
+                    <div class="connector vertical-line" style="top: 255px; right: 255px; height: 85px;"></div>
+                    
+                    <!-- Semi Left to Final -->
+                    <div class="connector horizontal-line" style="top: 245px; left: 460px; width: 40px;"></div>
+                    
+                    <!-- Semi Right to Final -->
+                    <div class="connector horizontal-line" style="top: 245px; right: 460px; width: 40px;"></div>
+                                        </div>
+                                        </div>
+                                    </div>
+        
+        <!-- Scroll right button -->
+        <button class="scroll-btn scroll-right" id="scroll-right">→</button>
+        
+        <!-- Position indicator -->
+        <div class="position-indicator" id="position-indicator">
+            <div class="position-pip" data-position="0"></div>
+            <div class="position-pip" data-position="1"></div>
+            <div class="position-pip" data-position="2"></div>
+            <div class="position-pip" data-position="3"></div>
+        </div>
+        
+        <!-- Progress dots -->
+        <div class="progress-dots">
+            <div class="dot active"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+                                        </div>
+        
+        <!-- Navigation buttons -->
+        <div class="tournament-nav">
+            <button id="back-btn" class="tournament-button">Back</button>
+            <button id="play-btn" class="tournament-button">Play</button>
+            <button id="reset-btn" class="tournament-button" style="background-color: #e74c3c;">Reset</button>
+                                    </div>
+                                </div>
+
+    <!-- Tournament audio -->
+    <audio id="tournament-theme" src="../audio/world cup theme.mp3" loop></audio>
+    
+    <script>
+        // Get human-readable team name from ID - defined at the top to avoid reference errors
+        function getTeamName(teamId) {
+            // Create a mapping of team IDs to readable names
+            const teamNames = {
+                'argentina': 'Argentina',
+                'france': 'France',
+                'china': 'China',
+                'united-kingdom': 'UK',
+                'italy': 'Italy',
+                'england': 'England',
+                'SaudiArabia': 'Saudi Arabia',
+                'belgium': 'Belgium',
+                'germany': 'Germany',
+                'portugal': 'Portugal',
+                'spain': 'Spain',
+                'egypt': 'Egypt',
+                'brazil-': 'Brazil',
+                'japan': 'Japan',
+                'qatar': 'Qatar',
+                'poland': 'Poland'
+            };
+            
+            return teamNames[teamId] || teamId;
+        }
+        
+        // Wait for document to load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Tournament page loaded");
+            
+            // Tournament state variables
+            let tournamentStage = 0; // 0=group, 1=quarter, 2=semi, 3=final
+            let playerTeam = localStorage.getItem('playerTeam');
+            
+            // Define tournament teams structure - changed from const to let so it can be modified
+            let tournamentTeams = {
+                groupA: ['argentina', 'france', 'china', 'united-kingdom'],
+                groupB: ['italy', 'england', 'SaudiArabia', 'belgium'],
+                groupC: ['germany', 'portugal', 'palestine', 'egypt'],
+                groupD: ['brazil-', 'argentina', 'japan', 'qatar']
+            };
+            
+            // Find which group the player's team is in
+            let playerGroup = null;
+            for (const groupKey in tournamentTeams) {
+                if (tournamentTeams[groupKey].includes(playerTeam)) {
+                    playerGroup = groupKey;
+                    break;
+                }
+            }
+            
+            // If player team not found in any group, default to groupA
+            if (!playerGroup) {
+                playerGroup = 'groupA';
+                playerTeam = tournamentTeams.groupA[0];
+            }
+            
+            // Check if we need to reset the tournament (first visit)
+            const hasVisitedTournament = localStorage.getItem('hasVisitedTournament');
+            if (!hasVisitedTournament) {
+                // First visit - reset tournament state
+                resetTournament();
+                localStorage.setItem('hasVisitedTournament', 'true');
+            }
+            
+            // Set up back button handler
+            const backButton = document.getElementById('back-btn');
+            if (backButton) {
+                console.log("Back button found");
+                backButton.addEventListener('click', function() {
+                    console.log("Back button clicked");
+                    // Reset tournament when going back to main menu for clean start next time
+                    localStorage.removeItem('hasVisitedTournament');
+                    resetTournament();
+                    window.location.href = '../index.html';
+                });
+            } else {
+                console.error("Back button not found");
+            }
+            
+            // Set up reset button handler
+            const resetButton = document.getElementById('reset-btn');
+            if (resetButton) {
+                console.log("Reset button found");
+                resetButton.addEventListener('click', function() {
+                    console.log("Reset button clicked");
+                    resetTournament();
+                    localStorage.removeItem('hasVisitedTournament');
+                    
+                    // Make sure audio continues playing after reset
+                    // We'll add a flag to localStorage to indicate we want to play audio after reload
+                    localStorage.setItem('playAudioAfterReset', 'true');
+                    
+                    // Reload page to show reset state
+                    window.location.reload();
+                });
+            } else {
+                console.error("Reset button not found");
+            }
+            
+            // Set up horizontal scroll buttons
+            const scrollLeftBtn = document.getElementById('scroll-left');
+            const scrollRightBtn = document.getElementById('scroll-right');
+            const scrollContainer = document.getElementById('bracket-scroll');
+            
+            // Position indicator
+            const positionIndicator = document.getElementById('position-indicator');
+            const positionPips = document.querySelectorAll('.position-pip');
+            let currentPosition = 0;
+            const maxPositions = positionPips.length - 1;
+            
+            console.log("Setting up scroll buttons:", scrollLeftBtn, scrollRightBtn);
+            
+            // Update position indicator
+            function updatePositionIndicator() {
+                positionPips.forEach((pip, index) => {
+                    if (index === currentPosition) {
+                        pip.classList.add('active');
+                    } else {
+                        pip.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Scroll to position
+            function scrollToPosition(position) {
+                console.log("Scrolling to position:", position);
+                if (position < 0) position = 0;
+                if (position > maxPositions) position = maxPositions;
+                
+                currentPosition = position;
+                updatePositionIndicator();
+                updateStageNavigation();
+                
+                const totalWidth = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+                
+            
+                const scrollPositions = {
+                    0: 0, // Groups & Quarters (start of bracket)
+                    1: totalWidth * 0.25, // Semi Finals
+                    2: totalWidth * 0.50, // Finals
+                    3: totalWidth * 0.82
+                };
+                
+                // Get the specific pixel position for this position index
+                const scrollLeft = scrollPositions[position] || 0;
+                
+                // Scroll to position with smooth behavior
+                scrollContainer.scrollTo({
+                    left: scrollLeft,
+                    behavior: 'smooth'
+                });
+            }
+            
+            // Left scroll button
+            if (scrollLeftBtn) {
+                scrollLeftBtn.addEventListener('click', function() {
+                    console.log("Left scroll button clicked");
+                    scrollToPosition(currentPosition - 1);
+                });
+            } else {
+                console.error("Left scroll button not found");
+            }
+            
+            // Right scroll button
+            if (scrollRightBtn) {
+                scrollRightBtn.addEventListener('click', function() {
+                    console.log("Right scroll button clicked");
+                    scrollToPosition(currentPosition + 1);
+                });
+            } else {
+                console.error("Right scroll button not found");
+            }
+            
+            // Position pip click
+            positionPips.forEach(pip => {
+                pip.addEventListener('click', function() {
+                    const position = parseInt(this.getAttribute('data-position'));
+                    console.log("Position pip clicked:", position);
+                    scrollToPosition(position);
+                });
+            });
+            
+            // Handle manual scrolling
+            if (scrollContainer) {
+                scrollContainer.addEventListener('scroll', function() {
+                    // Detect position based on scroll
+                    const totalWidth = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+                    const segmentSize = totalWidth / maxPositions;
+                    const position = Math.round(scrollContainer.scrollLeft / segmentSize);
+                    
+                    if (position !== currentPosition) {
+                        currentPosition = position;
+                        updatePositionIndicator();
+                        updateStageNavigation(); // Update stage navigation buttons
+                    }
+                });
+            } else {
+                console.error("Scroll container not found");
+            }
+            
+            // Set up play button handler
+            const playButton = document.getElementById('play-btn');
+            if (playButton) {
+                console.log("Play button found");
+                playButton.addEventListener('click', function() {
+                    console.log("Play button clicked");
+                    // Get the previously selected team from localStorage
+                    const playerTeam = localStorage.getItem('playerTeam');
+                    
+                    if (playerTeam) {
+                        let nextOpponent;
+                        
+                        if (tournamentStage === 0) {
+                            // Group stage - find opponent in player's group
+                            const teams = tournamentTeams[playerGroup];
+                            const playerIndex = teams.indexOf(playerTeam);
+                            
+                            if (playerIndex < 0) {
+                                console.error("Player team not found in their group");
+                                return;
+                            }
+                            
+                            // Determine opponent based on player position in group
+                            if (playerIndex < 2) {
+                                // Player is in first two positions
+                                // Opponent is the other team in the first two
+                                nextOpponent = teams[playerIndex === 0 ? 1 : 0];
+                            } else {
+                                // Player is in last two positions
+                                // Opponent is the other team in the last two
+                                nextOpponent = teams[playerIndex === 2 ? 3 : 2];
+                            }
+                            
+                            console.log(`Player (${playerTeam}) in ${playerGroup} at index ${playerIndex} will play against ${nextOpponent}`);
+                        } 
+                        else if (tournamentStage === 1) {
+                            // Quarter finals - get opponent based on player's group
+                            const knockoutTeams = localStorage.getItem('knockoutTeams') ? 
+                                JSON.parse(localStorage.getItem('knockoutTeams')) : null;
+                            
+                            if (!knockoutTeams) {
+                                console.error("No knockout teams found");
+                                setupQuarterFinals(); // Try setting up quarter-finals
+                                return;
+                            }
+                            
+                            // Find which quarter-final match the player is in
+                            let playerQuarterKey = null;
+                            for (const key in knockoutTeams.quarters) {
+                                if (knockoutTeams.quarters[key].includes(playerTeam)) {
+                                    playerQuarterKey = key;
+                                    break;
+                                }
+                            }
+                            
+                            if (!playerQuarterKey) {
+                                console.error("Player not found in any quarter-final");
+                                return;
+                            }
+                            
+                            // Get opponent from the same quarter-final match
+                            nextOpponent = knockoutTeams.quarters[playerQuarterKey].find(team => team !== playerTeam);
+                            
+                            console.log(`Quarter-final: Player (${playerTeam}) will play against ${nextOpponent}`);
+                        } 
+                        else if (tournamentStage === 2) {
+                            // Semi finals - get opponent from player's semi
+                            const knockoutTeams = JSON.parse(localStorage.getItem('knockoutTeams'));
+                            
+                            if (!knockoutTeams || !knockoutTeams.semis) {
+                                console.error("No semi-finals data found");
+                                setupSemiFinals(); // Try setting up semi-finals
+                                return;
+                            }
+                            
+                            // Find player's semi
+                            const playerSemiKey = knockoutTeams.semis.left.includes(playerTeam) ? 'left' : 'right';
+                            
+                            // Opponent is the other team in player's semi
+                            nextOpponent = knockoutTeams.semis[playerSemiKey].find(team => team !== playerTeam);
+                            
+                            console.log(`Semi-final: Player (${playerTeam}) will play against ${nextOpponent}`);
+                        } 
+                        else if (tournamentStage === 3) {
+                            // Finals - get opponent from finals
+                            const knockoutTeams = JSON.parse(localStorage.getItem('knockoutTeams'));
+                            
+                            if (!knockoutTeams || !knockoutTeams.final) {
+                                console.error("No finals data found");
+                                setupFinals(); // Try setting up finals
+                                return;
+                            }
+                            
+                            // Opponent is the other team in the final
+                            nextOpponent = knockoutTeams.final.find(team => team !== playerTeam);
+                            
+                            console.log(`Final: Player (${playerTeam}) will play against ${nextOpponent}`);
+                        }
+                        
+                        if (!nextOpponent) {
+                            console.error("Could not find next opponent");
+                            return;
+                        }
+                        
+                        console.log("Starting match:", playerTeam, "vs", nextOpponent);
+                        
+                        // Store the opponent team
+                        localStorage.setItem('opponentTeam', nextOpponent);
+                        
+                        // Store current tournament stage
+                        localStorage.setItem('tournamentStage', tournamentStage);
+                        
+                        // Stop tournament music before navigating
+                        stopTournamentTheme();
+                        
+                        // Navigate to the game with tournament mode parameters
+                        window.location.href = '../index.html?mode=tournament&start=true';
+                    } else {
+                        // If no team was selected in the main menu, alert the user
+                        alert('Please go back and select a team from the main menu first');
+                    }
+                });
+            } else {
+                console.error("Play button not found");
+            }
+            
+            // Initialize tournament progress from localStorage
+            initializeTournament();
+            
+            // Check for match results in URL parameters
+            checkForMatchResults();
+            
+            // Make teams selectable
+            const teams = document.querySelectorAll('.team');
+            teams.forEach(team => {
+                team.addEventListener('click', function() {
+                    // Only allow selection in groups
+                    if (this.closest('.group')) {
+                        // Remove selection from other teams in the same group
+                        const groupTeams = this.closest('.group').querySelectorAll('.team');
+                        groupTeams.forEach(t => t.classList.remove('selected'));
+                        
+                        // Select this team
+                        this.classList.add('selected');
+                    }
+                });
+            });
+            
+            // Check if there are match results in URL parameters
+            function checkForMatchResults() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const playerScore = urlParams.get('playerScore');
+                const opponentScore = urlParams.get('opponentScore');
+                
+                if (playerScore !== null && opponentScore !== null) {
+                    // Clear URL parameters
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    
+                    // Always advance to the next stage if player score is in URL (means they won)
+                    // The game.js already ensures they're sent back to index.html if they lost
+                    advanceToNextStage();
+                    
+                    // Show the next match preview after advancing
+                    setTimeout(showNextOpponentPreview, 500);
+                }
+            }
+            
+            // Advance to the next tournament stage
+            function advanceToNextStage() {
+                const stage = parseInt(localStorage.getItem('tournamentStage') || '0');
+                
+                if (stage === 0) {
+                    // Group stage completed - advance to quarter finals
+                    showQuarterFinals();
+                    // Do not change scroll position since quarters are in the same view as groups
+                } else if (stage === 1) {
+                    // Quarter finals completed - advance to semi finals
+                    showSemiFinals();
+                    // Scroll to semi-finals position (position 1)
+                    scrollToPosition(1);
+                } else if (stage === 2) {
+                    // Semi finals completed - advance to finals
+                    showFinals();
+                    // Scroll to finals position (position 2)
+                    scrollToPosition(2);
+                } else if (stage === 3) {
+                    // Finals completed - show champion
+                    showChampion();
+                    // Scroll to champion position (position 3)
+                    scrollToPosition(3);
+                }
+            }
+            
+            // Show Champion celebration screen
+            function showChampion() {
+                // Set tournament stage to completed
+                tournamentStage = 4;
+                localStorage.setItem('tournamentStage', 4);
+                
+                // Get player's team
+                const playerTeam = localStorage.getItem('playerTeam');
+                if (!playerTeam) return;
+                
+                // Store tournament champion
+                localStorage.setItem('tournamentChampion', playerTeam);
+                
+                // Play celebration sounds
+                playCelebrationSounds();
+                
+                // Create a celebration overlay
+                const celebrationOverlay = document.createElement('div');
+                celebrationOverlay.className = 'celebration-overlay';
+                document.querySelector('.tournament-container').appendChild(celebrationOverlay);
+                
+                // Add celebration content
+                celebrationOverlay.innerHTML = `
+                    <div class="stadium-background">
+                        <div class="stadium-lights"></div>
+                        <div class="stadium-crowd"></div>
+                    </div>
+                    <div class="celebration-content">
+                        <div class="celebration-title">CHAMPION!</div>
+                        <div class="celebration-team">
+                            <img src="../flags/${playerTeam}.png" class="champion-flag" alt="${getTeamName(playerTeam)}">
+                            <div class="champion-name">${getTeamName(playerTeam)}</div>
+                        </div>
+                        <div class="cup-container">
+                            <img src="cup.png" class="trophy-cup-img" alt="Trophy Cup">
+                        </div>
+                        <div class="celebration-message">Congratulations! You are the World Champions!</div>
+                        <div class="fireworks-container">
+                            <div class="firework" style="--delay: 0s; --x: 20%; --y: 60%"></div>
+                            <div class="firework" style="--delay: 0.5s; --x: 80%; --y: 60%"></div>
+                            <div class="firework" style="--delay: 1s; --x: 50%; --y: 40%"></div>
+                            <div class="firework" style="--delay: 1.5s; --x: 30%; --y: 70%"></div>
+                            <div class="firework" style="--delay: 2s; --x: 70%; --y: 50%"></div>
+                        </div>
+                        <button class="celebration-button">Continue</button>
+                    </div>
+                    <div class="confetti-container"></div>
+                `;
+                
+                // Add styles for celebration
+                const celebrationStyle = document.createElement('style');
+                celebrationStyle.textContent = `
+                    .celebration-overlay {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 320px;
+                        height: 570px;
+                        background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(25,25,112,0.95) 100%);
+                        z-index: 1000;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        opacity: 0;
+                        animation: fadeIn 1s forwards;
+                        overflow: hidden;
+                    }
+                    
+                    @keyframes fadeIn {
+                        0% { opacity: 0; }
+                        100% { opacity: 1; }
+                    }
+                    
+                    .stadium-background {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+                        opacity: 0.8;
+                        z-index: -1;
+                    }
+                    
+                    .stadium-lights {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: radial-gradient(ellipse at center, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0) 70%);
+                        animation: pulseLights 4s infinite alternate;
+                    }
+                    
+                    @keyframes pulseLights {
+                        0% { opacity: 0.3; }
+                        100% { opacity: 0.7; }
+                    }
+                    
+                    .stadium-crowd {
+                        position: absolute;
+                        bottom: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 30%;
+                        background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(50,50,50,0.7) 100%);
+                        animation: crowdMove 2s infinite alternate;
+                    }
+                    
+                    @keyframes crowdMove {
+                        0% { transform: translateY(0); }
+                        100% { transform: translateY(-5px); }
+                    }
+                    
+                    .celebration-content {
+                        text-align: center;
+                        padding: 15px;
+                        max-width: 290px;
+                        position: relative;
+                        z-index: 10;
+                    }
+                    
+                    .celebration-title {
+                        font-size: 28px;
+                        font-weight: bold;
+                        color: gold;
+                        text-transform: uppercase;
+                        margin-bottom: 10px;
+                        text-shadow: 0 0 10px rgba(255,215,0,0.7);
+                        animation: pulseText 2s infinite;
+                    }
+                    
+                    @keyframes pulseText {
+                        0% { transform: scale(1); }
+                        50% { transform: scale(1.1); }
+                        100% { transform: scale(1); }
+                    }
+                    
+                    .celebration-team {
+                        margin: 10px 0;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                    }
+                    
+                    .champion-flag {
+                        width: 60px;
+                        height: 40px;
+                        object-fit: cover;
+                        border-radius: 5px;
+                        box-shadow: 0 0 15px rgba(255,255,255,0.7);
+                        margin-bottom: 10px;
+                        animation: waveFlag 3s ease-in-out infinite;
+                    }
+                    
+                    @keyframes waveFlag {
+                        0% { transform: rotate(-5deg); }
+                        50% { transform: rotate(5deg); }
+                        100% { transform: rotate(-5deg); }
+                    }
+                    
+                    .champion-name {
+                        font-size: 18px;
+                        color: white;
+                        font-weight: bold;
+                    }
+                    
+                    .cup-container {
+                        position: relative;
+                        height: 180px;
+                        margin: 10px 0;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                    }
+                    
+                    .trophy-cup-img {
+                        height: 160px;
+                        object-fit: contain;
+                        filter: drop-shadow(0 0 10px rgba(255,215,0,0.6));
+                        animation: floatTrophy 3s ease-in-out infinite;
+                    }
+                    
+                    @keyframes floatTrophy {
+                        0% { transform: translateY(0); }
+                        50% { transform: translateY(-10px); }
+                        100% { transform: translateY(0); }
+                    }
+                    
+                    .celebration-message {
+                        font-size: 14px;
+                        color: white;
+                        margin: 10px 0;
+                        line-height: 1.4;
+                        text-shadow: 0 0 5px rgba(0,0,0,0.7);
+                    }
+                    
+                    .fireworks-container {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        pointer-events: none;
+                    }
+                    
+                    .firework {
+                        position: absolute;
+                        width: 10px;
+                        height: 10px;
+                        border-radius: 50%;
+                        transform: scale(0);
+                        left: var(--x, 50%);
+                        top: var(--y, 50%);
+                        animation: explode 2s var(--delay, 0s) infinite;
+                    }
+                    
+                    @keyframes explode {
+                        0% { transform: scale(0); background: white; box-shadow: 0 0 5px white; }
+                        5% { transform: scale(0.1); background: white; box-shadow: 0 0 10px white; }
+                        10% { transform: scale(1); background: rgba(255,50,50,0.8); box-shadow: 0 0 20px red; }
+                        20% { transform: scale(1.2); background: rgba(255,215,0,0.8); box-shadow: 0 0 20px gold; }
+                        30% { transform: scale(1.4); background: rgba(50,50,255,0.8); box-shadow: 0 0 20px blue; }
+                        100% { transform: scale(1.6); opacity: 0; background: transparent; box-shadow: none; }
+                    }
+                    
+                    .celebration-button {
+                        padding: 8px 16px;
+                        background-color: gold;
+                        color: #222;
+                        border: none;
+                        border-radius: 25px;
+                        font-size: 14px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        margin-top: 10px;
+                        transition: all 0.3s ease;
+                        animation: pulseButton 1.5s infinite;
+                        z-index: 20;
+                        position: relative;
+                    }
+                    
+                    .celebration-button:hover {
+                        transform: scale(1.1);
+                        box-shadow: 0 0 15px rgba(255,215,0,0.7);
+                    }
+                    
+                    @keyframes pulseButton {
+                        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,215,0,0.7); }
+                        70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255,215,0,0); }
+                        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,215,0,0); }
+                    }
+                    
+                    /* Confetti styles */
+                    .confetti-container {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        pointer-events: none;
+                        overflow: hidden;
+                        z-index: 5;
+                    }
+                    
+                    .confetti {
+                        position: absolute;
+                        width: 8px;
+                        height: 8px;
+                        border-radius: 3px;
+                        opacity: 0.7;
+                        animation: fall linear forwards;
+                    }
+                `;
+                document.head.appendChild(celebrationStyle);
+                
+                // Add confetti animation
+                const confettiContainer = celebrationOverlay.querySelector('.confetti-container');
+                const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'];
+                
+                // Add confetti pieces
+                for (let i = 0; i < 100; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                    confetti.style.animationDelay = (Math.random() * 2) + 's';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    
+                    // Add falling animation
+                    const fallAnimation = `
+                        @keyframes fall {
+                            0% { transform: translateY(-5vh) rotate(0deg); opacity: 1; }
+                            100% { transform: translateY(100vh) rotate(${Math.random() * 360}deg); opacity: 0.3; }
+                        }
+                    `;
+                    const animationStyle = document.createElement('style');
+                    animationStyle.textContent = fallAnimation;
+                    document.head.appendChild(animationStyle);
+                    
+                    confettiContainer.appendChild(confetti);
+                }
+                
+                // Add button click handler
+                const continueButton = celebrationOverlay.querySelector('.celebration-button');
+                continueButton.addEventListener('click', function() {
+                    // Stop sounds
+                    stopCelebrationSounds();
+                    
+                    // Hide celebration overlay
+                    celebrationOverlay.style.animation = 'fadeOut 0.5s forwards';
+                    
+                    // Add fadeOut animation
+                    const fadeOutAnimation = `
+                        @keyframes fadeOut {
+                            0% { opacity: 1; }
+                            100% { opacity: 0; }
+                        }
+                    `;
+                    const animStyle = document.createElement('style');
+                    animStyle.textContent = fadeOutAnimation;
+                    document.head.appendChild(animStyle);
+                    
+                    // Remove overlay after animation completes
+                    setTimeout(() => {
+                        celebrationOverlay.remove();
+                        updatePlayButton(); // Update the play button to show tournament completed
+                    }, 500);
+                });
+            }
+            
+            // Function to play celebration sounds
+            function playCelebrationSounds() {
+                // Create audio elements
+                const crowdCheer = new Audio('crowd-cheer.mp3');
+                crowdCheer.volume = 0.7;
+                crowdCheer.loop = true;
+                
+                const victoryFanfare = new Audio('victory-fanfare.mp3');
+                victoryFanfare.volume = 0.8;
+                
+                const fireworkSound = new Audio('firework-sound.mp3');
+                fireworkSound.volume = 0.5;
+                
+                // Store references in window object so they can be stopped later
+                window.celebrationSounds = {
+                    crowdCheer,
+                    victoryFanfare,
+                    fireworkSound
+                };
+                
+                // Play sounds with slight delay
+                crowdCheer.play();
+                
+                setTimeout(() => {
+                    victoryFanfare.play();
+                }, 500);
+                
+                // Play firework sounds periodically
+                const playFireworks = () => {
+                    fireworkSound.currentTime = 0;
+                    fireworkSound.play();
+                };
+                
+                // Play first firework sound after 2 seconds
+                setTimeout(playFireworks, 2000);
+                
+                // Set interval to play firework sounds
+                window.fireworkInterval = setInterval(playFireworks, 3000);
+            }
+            
+            // Function to stop celebration sounds
+            function stopCelebrationSounds() {
+                if (window.celebrationSounds) {
+                    for (const sound of Object.values(window.celebrationSounds)) {
+                        sound.pause();
+                        sound.currentTime = 0;
+                    }
+                }
+                
+                if (window.fireworkInterval) {
+                    clearInterval(window.fireworkInterval);
+                }
+            }
+            
+            // Reset tournament state completely
+            function resetTournament() {
+                console.log("Resetting tournament state");
+                tournamentStage = 0;
+                localStorage.setItem('tournamentStage', '0');
+                localStorage.removeItem('tournamentChampion');
+                localStorage.removeItem('tournamentTeams'); // Remove stored teams
+                localStorage.removeItem('knockoutTeams'); // Remove stored knockout teams
+                hideAllStages();
+                
+                // Re-randomize teams
+                randomizeTeams();
+                
+                // Store new teams
+                localStorage.setItem('tournamentTeams', JSON.stringify(tournamentTeams));
+                
+                updatePlayButton();
+            }
+            
+            // Initialize tournament state
+            function initializeTournament() {
+                // Reset - hide all knockout stages
+                hideAllStages();
+                
+                // Randomize teams ONLY if this is a new tournament or reset requested
+                if (!localStorage.getItem('tournamentTeams')) {
+                    randomizeTeams();
+                    
+                    // Store randomized teams in localStorage
+                    localStorage.setItem('tournamentTeams', JSON.stringify(tournamentTeams));
+                } else {
+                    // Use previously stored teams
+                    tournamentTeams = JSON.parse(localStorage.getItem('tournamentTeams'));
+                    
+                    // Update UI with stored teams
+                    updateGroupTeamsFromIds('group-a', tournamentTeams.groupA);
+                    updateGroupTeamsFromIds('group-b', tournamentTeams.groupB);
+                    updateGroupTeamsFromIds('group-c', tournamentTeams.groupC);
+                    updateGroupTeamsFromIds('group-d', tournamentTeams.groupD);
+                    
+                    // Highlight player's team
+                    highlightPlayerTeam();
+                }
+                
+                // Check if we already have tournament progress
+                const stage = localStorage.getItem('tournamentStage');
+                
+                if (stage) {
+                    tournamentStage = parseInt(stage);
+                    
+                    // Show appropriate stage based on current progress
+                    if (tournamentStage === 1) {
+                        // Quarter finals
+                        showQuarterFinals(false);
+                    } else if (tournamentStage === 2) {
+                        // Semi finals
+                        showSemiFinals(false);
+                    } else if (tournamentStage === 3) {
+                        // Finals
+                        showFinals(false);
+                    } else if (tournamentStage === 4) {
+                        // Tournament complete
+                        showChampion();
+                    } else {
+                        // Group stage - reset to beginning
+                        tournamentStage = 0;
+                        localStorage.setItem('tournamentStage', 0);
+                    }
+                } else {
+                    // New tournament - show groups only
+                    tournamentStage = 0;
+                    localStorage.setItem('tournamentStage', 0);
+                }
+                
+                // Update play button
+                updatePlayButton();
+                
+                // Scroll to appropriate position based on tournament stage
+                scrollToStagePosition();
+                
+                // Add a pre-play preview to show who you'll be playing against
+                showNextOpponentPreview();
+            }
+            
+            // Show who the player will play against next
+            function showNextOpponentPreview() {
+                // Get player team
+                const playerTeam = localStorage.getItem('playerTeam');
+                if (!playerTeam) return;
+                
+                let opponentTeam = null;
+                let matchTitle = "";
+                
+                // Different preview based on tournament stage
+                if (tournamentStage === 0) {
+                    // Group stage - find opponent in player's group
+                    const teams = tournamentTeams[playerGroup];
+                    const playerIndex = teams.indexOf(playerTeam);
+                    
+                    if (playerIndex < 0) {
+                        console.error("Player team not found in their group");
+                        return;
+                    }
+                    
+                    // Determine opponent based on player position in group
+                    if (playerIndex < 2) {
+                        // Player is in first two positions
+                        // Opponent is the other team in the first two
+                        opponentTeam = teams[playerIndex === 0 ? 1 : 0];
+                        matchTitle = `${playerGroup.replace('group', 'Group ')} Match (First Two):`;
+                    } else {
+                        // Player is in last two positions
+                        // Opponent is the other team in the last two
+                        opponentTeam = teams[playerIndex === 2 ? 3 : 2];
+                        matchTitle = `${playerGroup.replace('group', 'Group ')} Match (Last Two):`;
+                    }
+                } 
+                else if (tournamentStage === 1) {
+                    // Quarter finals - get opponent from player's quarter-final match
+                    const knockoutTeams = localStorage.getItem('knockoutTeams') ? 
+                        JSON.parse(localStorage.getItem('knockoutTeams')) : null;
+                    
+                    if (!knockoutTeams) {
+                        console.error("No knockout teams found for preview");
+                        return;
+                    }
+                    
+                    // Find which quarter-final match the player is in
+                    let playerQuarterKey = null;
+                    for (const key in knockoutTeams.quarters) {
+                        if (knockoutTeams.quarters[key].includes(playerTeam)) {
+                            playerQuarterKey = key;
+                            break;
+                        }
+                    }
+                    
+                    if (!playerQuarterKey) {
+                        console.error("Player not found in any quarter-final for preview");
+                        return;
+                    }
+                    
+                    // Get opponent from the same quarter-final match
+                    opponentTeam = knockoutTeams.quarters[playerQuarterKey].find(team => team !== playerTeam);
+                    
+                    // Determine which group's quarter-final this is
+                    let groupName = "";
+                    if (playerQuarterKey === 'leftTop') groupName = "Group A";
+                    else if (playerQuarterKey === 'leftBottom') groupName = "Group B";
+                    else if (playerQuarterKey === 'rightTop') groupName = "Group C";
+                    else if (playerQuarterKey === 'rightBottom') groupName = "Group D";
+                    
+                    matchTitle = `${groupName} Quarter Final:`;
+                }
+                else if (tournamentStage === 2) {
+                    // Semi finals - get opponent from same semi
+                    const knockoutTeams = localStorage.getItem('knockoutTeams') ? 
+                        JSON.parse(localStorage.getItem('knockoutTeams')) : null;
+                    
+                    if (!knockoutTeams || !knockoutTeams.semis) return;
+                    
+                    // Find player's semi
+                    let playerSemiKey = null;
+                    if (knockoutTeams.semis.left.includes(playerTeam)) {
+                        playerSemiKey = 'left';
+                    } else if (knockoutTeams.semis.right.includes(playerTeam)) {
+                        playerSemiKey = 'right';
+                    }
+                    
+                    if (!playerSemiKey) return;
+                    
+                    // Get opponent from same semi
+                    opponentTeam = knockoutTeams.semis[playerSemiKey].find(team => team !== playerTeam);
+                    
+                    // Determine which side of the bracket
+                    const bracketSide = playerSemiKey === 'left' ? 'Left' : 'Right';
+                    matchTitle = `${bracketSide} Semi Final:`;
+                }
+                else if (tournamentStage === 3) {
+                    // Finals - get opponent from finals
+                    const knockoutTeams = localStorage.getItem('knockoutTeams') ? 
+                        JSON.parse(localStorage.getItem('knockoutTeams')) : null;
+                    
+                    if (!knockoutTeams || !knockoutTeams.final) return;
+                    
+                    // Get opponent from final
+                    opponentTeam = knockoutTeams.final.find(team => team !== playerTeam);
+                    matchTitle = "Final:";
+                }
+                
+                if (!opponentTeam) return;
+                
+                console.log(`Next match preview: ${playerTeam} vs ${opponentTeam}`);
+                
+                // Store opponent for the actual match
+                localStorage.setItem('opponentTeam', opponentTeam);
+                
+                // Create or update preview element
+                let previewElement = document.getElementById('next-match-preview');
+                if (!previewElement) {
+                    previewElement = document.createElement('div');
+                    previewElement.id = 'next-match-preview';
+                    previewElement.className = 'next-match-preview';
+                    document.querySelector('.tournament-container').appendChild(previewElement);
+                    
+                    // Add CSS for the preview
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        .next-match-preview {
+                            position: absolute;
+                            bottom: 60px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            background-color: rgba(0, 0, 0, 0.8);
+                            border-radius: 15px;
+                            padding: 12px 20px;
+                            color: white;
+                            text-align: center;
+                            z-index: 100;
+                            border: 2px solid rgba(255, 215, 0, 0.5);
+                            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+                        }
+                        .next-match-teams {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 15px;
+                        }
+                        .next-match-team {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        }
+                        .next-match-flag {
+                            width: 40px;
+                            height: 40px;                           
+                            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+                            transition: transform 0.3s ease;
+                        }
+                        .next-match-team:first-child .next-match-flag {
+                            transform: perspective(300px) rotateY(15deg);
+                        }
+                        .next-match-team:last-child .next-match-flag {
+                            transform: perspective(300px) rotateY(-15deg);
+                        }
+                        .vs-small {
+                            font-size: 18px;
+                            font-weight: bold;
+                            color: #ff9800;
+                            text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+                            background-color: rgba(255, 255, 255, 0.1);
+                            width: 35px;
+                            height: 35px;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            border: 1px solid rgba(255, 152, 0, 0.3);
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+                
+                // Update preview content
+                previewElement.innerHTML = `
+                    <div class="next-match-teams">
+                        <div class="next-match-team">
+                            <img src="../flags/${playerTeam}.png" class="next-match-flag" alt="${getTeamName(playerTeam)}">
+                        </div>
+                        <div class="vs-small">VS</div>
+                        <div class="next-match-team">
+                            <img src="../flags/${opponentTeam}.png" class="next-match-flag" alt="${getTeamName(opponentTeam)}">
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Update this to scroll to appropriate position based on tournament stage
+            function scrollToStagePosition() {
+                // Wait for layout to complete
+                setTimeout(() => {
+                    let position = 0;
+                    
+                    if (tournamentStage === 0 || tournamentStage === 1) {
+                        // Group stage and Quarter finals - both in first position
+                        position = 0;
+                    } else if (tournamentStage === 2) {
+                        // Semi finals
+                        position = 1;
+                    } else if (tournamentStage === 3) {
+                        // Finals
+                        position = 2; 
+                    } else if (tournamentStage >= 4) {
+                        // Champion
+                        position = 3;
+                    }
+                    
+                    // Scroll to position and update stage nav
+                    scrollToPosition(position);
+                    
+                    // Update stage navigation buttons
+                    document.querySelectorAll('.stage-nav-button').forEach(button => {
+                        const btnStage = parseInt(button.getAttribute('data-stage'));
+                        if (btnStage === position) {
+                            button.classList.add('active');
+                        } else {
+                            button.classList.remove('active');
+                        }
+                    });
+                }, 100);
+            }
+            
+            // Hide all knockout stages
+            function hideAllStages() {
+                // Instead of hiding stages, just reset them to placeholder state
+                document.querySelectorAll('.quarter-match .team, .semi-match .team, .final-container .team').forEach(team => {
+                    team.classList.add('placeholder');
+                    const flagElement = team.querySelector('.team-flag');
+                    if (flagElement.tagName === 'IMG') {
+                        // Create placeholder div
+                        const placeholderDiv = document.createElement('div');
+                        placeholderDiv.className = 'team-flag';
+                        team.replaceChild(placeholderDiv, flagElement);
+                    }
+                    team.querySelector('span').textContent = '';
+                });
+            }
+            
+            // Highlight player's team in group stage
+            function highlightPlayerTeam() {
+                // Clear any previous selections
+                document.querySelectorAll('.team').forEach(team => {
+                    team.classList.remove('selected');
+                });
+                
+                // Find and highlight player's team
+                const playerTeamElement = document.querySelector(`.team[data-team="${playerTeam}"]`);
+                if (playerTeamElement && playerTeamElement.closest('.group')) {
+                    playerTeamElement.classList.add('selected');
+                }
+            }
+            
+            // Show quarter finals
+            function showQuarterFinals(updateStage = true) {
+                // Set tournament stage
+                if (updateStage) {
+                    tournamentStage = 1;
+                    localStorage.setItem('tournamentStage', 1);
+                }
+                
+                // Setup quarter finals bracket
+                setupQuarterFinals();
+                
+                // Show only quarter final matches
+                document.querySelectorAll('.quarter-match').forEach(match => {
+                    match.classList.add('visible');
+                });
+                
+                // Update play button
+                updatePlayButton();
+                
+                // Scroll to quarters
+                scrollToPosition(1);
+                
+                // Update match preview for quarter finals
+                showNextOpponentPreview();
+            }
+            
+            // Show semi finals
+            function showSemiFinals(updateStage = true) {
+                // Set tournament stage
+                if (updateStage) {
+                    tournamentStage = 2;
+                    localStorage.setItem('tournamentStage', 2);
+                }
+                
+                // Setup semi finals bracket
+                setupSemiFinals();
+                
+                // Show quarter finals and semi final matches
+                document.querySelectorAll('.quarter-match').forEach(match => {
+                    match.classList.add('visible');
+                });
+                document.querySelectorAll('.semi-match').forEach(match => {
+                    match.classList.add('visible');
+                });
+                
+                // Update play button
+                updatePlayButton();
+                
+                // Scroll to semis
+                scrollToPosition(2);
+            }
+            
+            // Show finals
+            function showFinals(updateStage = true) {
+                // Set tournament stage
+                if (updateStage) {
+                    tournamentStage = 3;
+                    localStorage.setItem('tournamentStage', 3);
+                }
+                
+                // Setup finals bracket
+                setupFinals();
+                
+                // Show all matches
+                document.querySelectorAll('.quarter-match').forEach(match => {
+                    match.classList.add('visible');
+                });
+                document.querySelectorAll('.semi-match').forEach(match => {
+                    match.classList.add('visible');
+                });
+                document.querySelector('.final-container').classList.add('visible');
+                
+                // Update play button
+                updatePlayButton();
+                
+                // Scroll to finals
+                scrollToPosition(3);
+            }
+            
+            // Setup quarter finals with player's team in the correct position
+            function setupQuarterFinals() {
+                // Get player's team
+            const playerTeam = localStorage.getItem('playerTeam');
+                if (!playerTeam) {
+                    console.error("Player team not found");
+                    return;
+                }
+                
+                // Check if we're advancing from group stage (and won)
+                const lastMatchResult = localStorage.getItem('lastMatchResult');
+                let wonLastMatch = false;
+                
+                if (lastMatchResult) {
+                    try {
+                        const result = JSON.parse(lastMatchResult);
+                        wonLastMatch = result.playerScore > result.opponentScore;
+                        console.log("Last match result:", result, "Won:", wonLastMatch);
+                    } catch (e) {
+                        console.error("Error parsing last match result:", e);
+                    }
+                }
+                
+                // Clear stored knockout teams if we're starting fresh
+                if (tournamentStage === 0 && wonLastMatch) {
+                    localStorage.removeItem('knockoutTeams');
+                }
+                
+                // Check if we already have knockout teams stored
+                if (localStorage.getItem('knockoutTeams')) {
+                    console.log("Using stored knockout teams");
+                    // Simply render the existing knockout teams
+                    const knockoutTeams = JSON.parse(localStorage.getItem('knockoutTeams'));
+                    applyKnockoutTeamsToUI(knockoutTeams);
+                    return;
+                }
+                
+                console.log("Creating new knockout bracket");
+                // Create new knockout bracket with logical advancement
+                const knockoutTeams = {
+                    groupMatches: {
+                        // For storing initial group matches
+                        groupA_first_two: [],
+                        groupA_last_two: [],
+                        groupB_first_two: [],
+                        groupB_last_two: [],
+                        groupC_first_two: [],
+                        groupC_last_two: [],
+                        groupD_first_two: [],
+                        groupD_last_two: []
+                    },
+                    quarters: {
+                        leftTop: [],
+                        leftBottom: [],
+                        rightTop: [],
+                        rightBottom: []
+                    },
+                    semis: {
+                        left: [],
+                        right: []
+                    },
+                    final: []
+                };
+                
+                // Find player's team in the groups
+                let playerGroup = null;
+                let playerIndex = -1;
+                
+                for (const groupKey in tournamentTeams) {
+                    const index = tournamentTeams[groupKey].indexOf(playerTeam);
+                    if (index !== -1) {
+                        playerGroup = groupKey;
+                        playerIndex = index;
+                        break;
+                    }
+                }
+                
+                if (!playerGroup) {
+                    console.error("Player's team not found in any group");
+                    return;
+                }
+                
+                console.log(`Player's team (${playerTeam}) found in ${playerGroup} at index ${playerIndex}`);
+                
+                // Setup group matches for all groups
+                
+                // Group A setup
+                knockoutTeams.groupMatches.groupA_first_two = [
+                    tournamentTeams.groupA[0], 
+                    tournamentTeams.groupA[1]
+                ];
+                
+                knockoutTeams.groupMatches.groupA_last_two = [
+                    tournamentTeams.groupA[2], 
+                    tournamentTeams.groupA[3]
+                ];
+                
+                // Group B setup
+                knockoutTeams.groupMatches.groupB_first_two = [
+                    tournamentTeams.groupB[0], 
+                    tournamentTeams.groupB[1]
+                ];
+                
+                knockoutTeams.groupMatches.groupB_last_two = [
+                    tournamentTeams.groupB[2], 
+                    tournamentTeams.groupB[3]
+                ];
+                
+                // Group C setup
+                knockoutTeams.groupMatches.groupC_first_two = [
+                    tournamentTeams.groupC[0], 
+                    tournamentTeams.groupC[1]
+                ];
+                
+                knockoutTeams.groupMatches.groupC_last_two = [
+                    tournamentTeams.groupC[2], 
+                    tournamentTeams.groupC[3]
+                ];
+                
+                // Group D setup
+                knockoutTeams.groupMatches.groupD_first_two = [
+                    tournamentTeams.groupD[0], 
+                    tournamentTeams.groupD[1]
+                ];
+                
+                knockoutTeams.groupMatches.groupD_last_two = [
+                    tournamentTeams.groupD[2], 
+                    tournamentTeams.groupD[3]
+                ];
+                
+                // Determine winners for each group's matches
+                // For the player's group, player always wins if they're in it
+                // For other groups, randomize winners
+                
+                if (playerGroup === 'groupB') {
+                    // For player in Group B
+                    if (playerIndex < 2) {
+                        // Player in first two teams, they win
+                        const firstTwoWinner = playerTeam;
+                        
+                        // Random winner from last two
+                        const lastTwoIndex = Math.floor(Math.random() * 2) + 2; // 2 or 3
+                        const lastTwoWinner = tournamentTeams.groupB[lastTwoIndex];
+                        
+                        // Group B quarter final
+                        knockoutTeams.quarters.leftBottom = [firstTwoWinner, lastTwoWinner];
+                    } else {
+                        // Player in last two teams, they win
+                        const lastTwoWinner = playerTeam;
+                        
+                        // Random winner from first two
+                        const firstTwoIndex = Math.floor(Math.random() * 2); // 0 or 1
+                        const firstTwoWinner = tournamentTeams.groupB[firstTwoIndex];
+                        
+                        // Group B quarter final
+                        knockoutTeams.quarters.leftBottom = [firstTwoWinner, lastTwoWinner];
+                    }
+                } else {
+                    // For Group B when player is not in it
+                    const firstTwoIndex = Math.floor(Math.random() * 2); // 0 or 1
+                    const firstTwoWinner = tournamentTeams.groupB[firstTwoIndex];
+                    
+                    const lastTwoIndex = Math.floor(Math.random() * 2) + 2; // 2 or 3
+                    const lastTwoWinner = tournamentTeams.groupB[lastTwoIndex];
+                    
+                    knockoutTeams.quarters.leftBottom = [firstTwoWinner, lastTwoWinner];
+                }
+                
+                // For Group A
+                if (playerGroup === 'groupA') {
+                    // For player in Group A
+                    if (playerIndex < 2) {
+                        // Player in first two teams, they win
+                        const firstTwoWinner = playerTeam;
+                        
+                        // Random winner from last two
+                        const lastTwoIndex = Math.floor(Math.random() * 2) + 2; // 2 or 3
+                        const lastTwoWinner = tournamentTeams.groupA[lastTwoIndex];
+                        
+                        // Group A quarter final
+                        knockoutTeams.quarters.leftTop = [firstTwoWinner, lastTwoWinner];
+                    } else {
+                        // Player in last two teams, they win
+                        const lastTwoWinner = playerTeam;
+                        
+                        // Random winner from first two
+                        const firstTwoIndex = Math.floor(Math.random() * 2); // 0 or 1
+                        const firstTwoWinner = tournamentTeams.groupA[firstTwoIndex];
+                        
+                        // Group A quarter final
+                        knockoutTeams.quarters.leftTop = [firstTwoWinner, lastTwoWinner];
+                    }
+                } else {
+                    // For Group A when player is not in it
+                    const firstTwoIndex = Math.floor(Math.random() * 2); // 0 or 1
+                    const firstTwoWinner = tournamentTeams.groupA[firstTwoIndex];
+                    
+                    const lastTwoIndex = Math.floor(Math.random() * 2) + 2; // 2 or 3
+                    const lastTwoWinner = tournamentTeams.groupA[lastTwoIndex];
+                    
+                    knockoutTeams.quarters.leftTop = [firstTwoWinner, lastTwoWinner];
+                }
+                
+                // For Group C
+                if (playerGroup === 'groupC') {
+                    // For player in Group C
+                    if (playerIndex < 2) {
+                        // Player in first two teams, they win
+                        const firstTwoWinner = playerTeam;
+                        
+                        // Random winner from last two
+                        const lastTwoIndex = Math.floor(Math.random() * 2) + 2; // 2 or 3
+                        const lastTwoWinner = tournamentTeams.groupC[lastTwoIndex];
+                        
+                        // Group C quarter final
+                        knockoutTeams.quarters.rightTop = [firstTwoWinner, lastTwoWinner];
+                    } else {
+                        // Player in last two teams, they win
+                        const lastTwoWinner = playerTeam;
+                        
+                        // Random winner from first two
+                        const firstTwoIndex = Math.floor(Math.random() * 2); // 0 or 1
+                        const firstTwoWinner = tournamentTeams.groupC[firstTwoIndex];
+                        
+                        // Group C quarter final
+                        knockoutTeams.quarters.rightTop = [firstTwoWinner, lastTwoWinner];
+                    }
+                } else {
+                    // For Group C when player is not in it
+                    const firstTwoIndex = Math.floor(Math.random() * 2); // 0 or 1
+                    const firstTwoWinner = tournamentTeams.groupC[firstTwoIndex];
+                    
+                    const lastTwoIndex = Math.floor(Math.random() * 2) + 2; // 2 or 3
+                    const lastTwoWinner = tournamentTeams.groupC[lastTwoIndex];
+                    
+                    knockoutTeams.quarters.rightTop = [firstTwoWinner, lastTwoWinner];
+                }
+                
+                // For Group D
+                if (playerGroup === 'groupD') {
+                    // For player in Group D
+                    if (playerIndex < 2) {
+                        // Player in first two teams, they win
+                        const firstTwoWinner = playerTeam;
+                        
+                        // Random winner from last two
+                        const lastTwoIndex = Math.floor(Math.random() * 2) + 2; // 2 or 3
+                        const lastTwoWinner = tournamentTeams.groupD[lastTwoIndex];
+                        
+                        // Group D quarter final
+                        knockoutTeams.quarters.rightBottom = [firstTwoWinner, lastTwoWinner];
+                    } else {
+                        // Player in last two teams, they win
+                        const lastTwoWinner = playerTeam;
+                        
+                        // Random winner from first two
+                        const firstTwoIndex = Math.floor(Math.random() * 2); // 0 or 1
+                        const firstTwoWinner = tournamentTeams.groupD[firstTwoIndex];
+                        
+                        // Group D quarter final
+                        knockoutTeams.quarters.rightBottom = [firstTwoWinner, lastTwoWinner];
+                    }
+                } else {
+                    // For Group D when player is not in it
+                    const firstTwoIndex = Math.floor(Math.random() * 2); // 0 or 1
+                    const firstTwoWinner = tournamentTeams.groupD[firstTwoIndex];
+                    
+                    const lastTwoIndex = Math.floor(Math.random() * 2) + 2; // 2 or 3
+                    const lastTwoWinner = tournamentTeams.groupD[lastTwoIndex];
+                    
+                    knockoutTeams.quarters.rightBottom = [firstTwoWinner, lastTwoWinner];
+                }
+                
+                // Apply knockout teams to UI
+                applyKnockoutTeamsToUI(knockoutTeams);
+                
+                // Store knockout teams
+                localStorage.setItem('knockoutTeams', JSON.stringify(knockoutTeams));
+            }
+            
+            // Function to apply knockout teams to UI
+            function applyKnockoutTeamsToUI(knockoutTeams) {
+                // Clear any existing placeholders
+                document.querySelectorAll('.team').forEach(team => {
+                    if (!team.closest('.group')) {
+                        team.classList.add('placeholder');
+                        team.querySelector('.team-flag').removeAttribute('src');
+                        team.querySelector('span').textContent = '';
+                    }
+                });
+                
+                // Apply quarter finals
+                if (knockoutTeams.quarters) {
+                    applyTeamsToMatch('.quarter-left-top', knockoutTeams.quarters.leftTop);
+                    applyTeamsToMatch('.quarter-left-bottom', knockoutTeams.quarters.leftBottom);
+                    applyTeamsToMatch('.quarter-right-top', knockoutTeams.quarters.rightTop);
+                    applyTeamsToMatch('.quarter-right-bottom', knockoutTeams.quarters.rightBottom);
+                }
+                
+                // Apply semi finals if available
+                if (knockoutTeams.semis) {
+                    if (knockoutTeams.semis.left && knockoutTeams.semis.left.length > 0) {
+                        applyTeamsToMatch('.semi-left', knockoutTeams.semis.left);
+                    }
+                    
+                    if (knockoutTeams.semis.right && knockoutTeams.semis.right.length > 0) {
+                        applyTeamsToMatch('.semi-right', knockoutTeams.semis.right);
+                    }
+                }
+                
+                // Apply final if available
+                if (knockoutTeams.final && knockoutTeams.final.length > 0) {
+                    applyTeamsToMatch('.final-match', knockoutTeams.final, true);
+                }
+            }
+            
+            // Apply teams to a match element
+            function applyTeamsToMatch(selector, teams, isFinal = false) {
+                const matchElement = document.querySelector(selector);
+                if (!matchElement) return;
+                
+                const teamElements = matchElement.querySelectorAll('.team');
+                
+                teams.forEach((team, index) => {
+                    if (teamElements[index]) {
+                        teamElements[index].classList.remove('placeholder');
+                        teamElements[index].setAttribute('data-team', team);
+                        const flagImg = teamElements[index].querySelector('.team-flag');
+                        if (flagImg.tagName === 'IMG') {
+                            flagImg.src = `../flags/${team}.png`;
+                            flagImg.alt = getTeamName(team);
+                        } else {
+                            // Create img element if it doesn't exist
+                            const newFlagImg = document.createElement('img');
+                            newFlagImg.src = `../flags/${team}.png`;
+                            newFlagImg.alt = getTeamName(team);
+                            newFlagImg.className = 'team-flag';
+                            
+                            // Replace the div with the img
+                            teamElements[index].replaceChild(newFlagImg, flagImg);
+                        }
+                        teamElements[index].querySelector('span').textContent = getTeamName(team);
+                    }
+                });
+            }
+            
+            // Setup semi finals
+            function setupSemiFinals() {
+                // Check if we already have knockout teams with semis
+                const knockoutTeams = localStorage.getItem('knockoutTeams') ? 
+                    JSON.parse(localStorage.getItem('knockoutTeams')) : null;
+                
+                if (knockoutTeams && knockoutTeams.semis && knockoutTeams.semis.left && knockoutTeams.semis.left.length > 0) {
+                    // Use stored semi teams
+                    applyKnockoutTeamsToUI(knockoutTeams);
+                    return;
+                }
+                
+                // Create or update knockout bracket
+                const updatedKnockout = knockoutTeams || {
+                    groupMatches: {
+                        // For storing initial group matches
+                        groupA_first_two: [],
+                        groupA_last_two: [],
+                        groupB_first_two: [],
+                        groupB_last_two: [],
+                        groupC_first_two: [],
+                        groupC_last_two: [],
+                        groupD_first_two: [],
+                        groupD_last_two: []
+                    },
+                    quarters: {
+                        leftTop: [],
+                        leftBottom: [],
+                        rightTop: [],
+                        rightBottom: []
+                    },
+                    semis: {
+                        left: [],
+                        right: []
+                    },
+                    final: []
+                };
+                
+                // Get player's team
+                const playerTeam = localStorage.getItem('playerTeam');
+                if (!playerTeam) {
+                    console.error("Player team not found for semi-finals");
+                    return;
+                }
+                
+                // Setup semi-finals - winner from Group A quarter and Group B quarter go to left semi
+                // Winners from right side quarters go to right semi
+                
+                // Player always advances if they're in the tournament at this stage
+                
+                // Find player's quarter
+                let playerQuarterKey = null;
+                for (const key in updatedKnockout.quarters) {
+                    if (updatedKnockout.quarters[key].includes(playerTeam)) {
+                        playerQuarterKey = key;
+                        break;
+                    }
+                }
+                
+                if (!playerQuarterKey) {
+                    console.error("Player not found in any quarter");
+                    return;
+                }
+                
+                console.log(`Player found in quarter: ${playerQuarterKey}`);
+                
+                // For the new structure:
+                // - leftTop (Group A quarter) and leftBottom (Group B quarter) winners go to left semi
+                // - rightTop and rightBottom winners go to right semi
+                
+                // Handle left semi-final
+                if (playerQuarterKey === 'leftTop' || playerQuarterKey === 'leftBottom') {
+                    // Player is in left bracket, they should advance to left semi
+                    updatedKnockout.semis.left = [playerTeam];
+                    
+                    // Add the other left quarter winner to left semi
+                    const otherLeftKey = playerQuarterKey === 'leftTop' ? 'leftBottom' : 'leftTop';
+                    
+                    // Randomly pick a winner from the other left quarter (if player is not in it)
+                    let otherLeftWinner;
+                    if (updatedKnockout.quarters[otherLeftKey].includes(playerTeam)) {
+                        // If player is somehow in both quarters, pick the other team
+                        otherLeftWinner = updatedKnockout.quarters[otherLeftKey].find(team => team !== playerTeam);
+                    } else {
+                        // Randomly pick one of the teams from the other quarter
+                        const randomIndex = Math.floor(Math.random() * updatedKnockout.quarters[otherLeftKey].length);
+                        otherLeftWinner = updatedKnockout.quarters[otherLeftKey][randomIndex];
+                    }
+                    
+                    updatedKnockout.semis.left.push(otherLeftWinner);
+                    
+                    // Fill right semi with random winners from right quarters
+                    const rightTopWinner = updatedKnockout.quarters.rightTop[Math.floor(Math.random() * updatedKnockout.quarters.rightTop.length)];
+                    const rightBottomWinner = updatedKnockout.quarters.rightBottom[Math.floor(Math.random() * updatedKnockout.quarters.rightBottom.length)];
+                    
+                    updatedKnockout.semis.right = [rightTopWinner, rightBottomWinner];
+                } 
+                else {
+                    // Player is in right bracket, they should advance to right semi
+                    updatedKnockout.semis.right = [playerTeam];
+                    
+                    // Add the other right quarter winner to right semi
+                    const otherRightKey = playerQuarterKey === 'rightTop' ? 'rightBottom' : 'rightTop';
+                    
+                    // Randomly pick a winner from the other right quarter
+                    let otherRightWinner;
+                    if (updatedKnockout.quarters[otherRightKey].includes(playerTeam)) {
+                        // If player is somehow in both quarters, pick the other team
+                        otherRightWinner = updatedKnockout.quarters[otherRightKey].find(team => team !== playerTeam);
+                } else {
+                        // Randomly pick one of the teams from the other quarter
+                        const randomIndex = Math.floor(Math.random() * updatedKnockout.quarters[otherRightKey].length);
+                        otherRightWinner = updatedKnockout.quarters[otherRightKey][randomIndex];
+                    }
+                    
+                    updatedKnockout.semis.right.push(otherRightWinner);
+                    
+                    // Fill left semi with random winners from left quarters
+                    const leftTopWinner = updatedKnockout.quarters.leftTop[Math.floor(Math.random() * updatedKnockout.quarters.leftTop.length)];
+                    const leftBottomWinner = updatedKnockout.quarters.leftBottom[Math.floor(Math.random() * updatedKnockout.quarters.leftBottom.length)];
+                    
+                    updatedKnockout.semis.left = [leftTopWinner, leftBottomWinner];
+                }
+                
+                // Apply to UI
+                applyKnockoutTeamsToUI(updatedKnockout);
+                
+                // Store updated knockout bracket
+                localStorage.setItem('knockoutTeams', JSON.stringify(updatedKnockout));
+                
+                // Update next match preview
+                showNextOpponentPreview();
+            }
+            
+            // Setup finals
+            function setupFinals() {
+                // Check if we already have knockout teams with final
+                const knockoutTeams = localStorage.getItem('knockoutTeams') ? 
+                    JSON.parse(localStorage.getItem('knockoutTeams')) : null;
+                
+                if (knockoutTeams && knockoutTeams.final && knockoutTeams.final.length > 0) {
+                    // Use stored final teams
+                    applyKnockoutTeamsToUI(knockoutTeams);
+                    return;
+                }
+                
+                // Create or update knockout bracket
+                const updatedKnockout = knockoutTeams || {
+                    groupMatches: {
+                        // For storing initial group matches
+                        groupA_first_two: [],
+                        groupA_last_two: [],
+                        groupB_first_two: [],
+                        groupB_last_two: [],
+                        groupC_first_two: [],
+                        groupC_last_two: [],
+                        groupD_first_two: [],
+                        groupD_last_two: []
+                    },
+                    quarters: {
+                        leftTop: [],
+                        leftBottom: [],
+                        rightTop: [],
+                        rightBottom: []
+                    },
+                    semis: {
+                        left: [],
+                        right: []
+                    },
+                    final: []
+                };
+                
+                // Find player's semi
+                let playerSemiKey = null;
+                const playerTeam = localStorage.getItem('playerTeam');
+                
+                if (!playerTeam) {
+                    console.error("Player team not found for finals");
+                    return;
+                }
+                
+                if (updatedKnockout.semis.left.includes(playerTeam)) {
+                    playerSemiKey = 'left';
+                } else if (updatedKnockout.semis.right.includes(playerTeam)) {
+                    playerSemiKey = 'right';
+                }
+                
+                if (!playerSemiKey) {
+                    console.error("Player not found in any semi");
+                    return;
+                }
+                
+                // Player advances to final
+                updatedKnockout.final = [playerTeam];
+                
+                // Other semi winner advances - randomly select if not player
+                const otherSemiKey = playerSemiKey === 'left' ? 'right' : 'left';
+                
+                // Randomly pick the other team for the final
+                let otherFinalist;
+                if (updatedKnockout.semis[otherSemiKey].includes(playerTeam)) {
+                    // If player is somehow in both semis, pick the other team
+                    otherFinalist = updatedKnockout.semis[otherSemiKey].find(team => team !== playerTeam);
+                    } else {
+                    // Randomly pick one of the teams from the other semi
+                    const randomIndex = Math.floor(Math.random() * updatedKnockout.semis[otherSemiKey].length);
+                    otherFinalist = updatedKnockout.semis[otherSemiKey][randomIndex];
+                }
+                
+                updatedKnockout.final.push(otherFinalist);
+                
+                // Apply to UI
+                applyKnockoutTeamsToUI(updatedKnockout);
+                
+                // Store updated knockout bracket
+                localStorage.setItem('knockoutTeams', JSON.stringify(updatedKnockout));
+                
+                // Update next match preview
+                showNextOpponentPreview();
+            }
+            
+            // Update play button text based on tournament stage
+            function updatePlayButton() {
+                const playButton = document.getElementById('play-btn');
+                if (!playButton) return;
+                
+                if (tournamentStage === 0) {
+                    playButton.textContent = 'Play First Round';
+                    playButton.disabled = false;
+                    playButton.style.opacity = '1';
+                } else if (tournamentStage === 1) {
+                    playButton.textContent = 'Play Quarter Final';
+                    playButton.disabled = false;
+                    playButton.style.opacity = '1';
+                } else if (tournamentStage === 2) {
+                    playButton.textContent = 'Play Semi Final';
+                    playButton.disabled = false;
+                    playButton.style.opacity = '1';
+                } else if (tournamentStage === 3) {
+                    playButton.textContent = 'Play Final';
+                    playButton.disabled = false;
+                    playButton.style.opacity = '1';
+                } else if (tournamentStage === 4) {
+                    playButton.textContent = 'Tournament Complete';
+                    playButton.disabled = true;
+                    playButton.style.opacity = '0.5';
+                }
+            }
+
+            // Randomize teams in groups at the start
+            function randomizeTeams() {
+                // Only randomize teams at the start of tournament or when reset
+                const hasTeamsStored = localStorage.getItem('tournamentTeams');
+                if (hasTeamsStored) {
+                    // Use previously stored teams
+                    tournamentTeams = JSON.parse(hasTeamsStored);
+                    
+                    // Update UI with stored teams
+                    updateGroupTeamsFromIds('group-a', tournamentTeams.groupA);
+                    updateGroupTeamsFromIds('group-b', tournamentTeams.groupB);
+                    updateGroupTeamsFromIds('group-c', tournamentTeams.groupC);
+                    updateGroupTeamsFromIds('group-d', tournamentTeams.groupD);
+                    
+                    // Highlight player's team
+                    highlightPlayerTeam();
+                    return;
+                }
+                
+                // List of available teams with their flags
+                const availableTeams = [
+                    {id: 'argentina', name: 'Argentina', seed: 1},
+                    {id: 'france', name: 'France', seed: 1},
+                    {id: 'china', name: 'China', seed: 3},
+                    {id: 'united-kingdom', name: 'United Kingdom', seed: 2},
+                    {id: 'italy', name: 'Italy', seed: 1},
+                    {id: 'england', name: 'England', seed: 1},
+                    {id: 'SaudiArabia', name: 'Saudi Arabia', seed: 3},
+                    {id: 'belgium', name: 'Belgium', seed: 2},
+                    {id: 'germany', name: 'Germany', seed: 1},
+                    {id: 'portugal', name: 'Portugal', seed: 2},
+                    {id: 'spain', name: 'Spain', seed: 3},
+                    {id: 'egypt', name: 'Egypt', seed: 2},
+                    {id: 'brazil-', name: 'Brazil', seed: 1},
+                    {id: 'japan', name: 'Japan', seed: 2},
+                    {id: 'qatar', name: 'Qatar', seed: 3},
+                    {id: 'poland', name: 'Poland', seed: 1}
+                ];
+                
+                // Get player's team
+                playerTeam = localStorage.getItem('playerTeam') || 'argentina';
+                
+                // Create player team object
+                const playerTeamObj = availableTeams.find(team => team.id === playerTeam) || 
+                                     {id: playerTeam, name: getTeamName(playerTeam), seed: 2};
+                
+                // Remove player's team from available teams to prevent duplicates
+                const filteredTeams = availableTeams.filter(team => team.id !== playerTeam);
+                
+                // Sort teams by seed for more logical grouping
+                const topSeeds = filteredTeams.filter(team => team.seed === 1);
+                const midSeeds = filteredTeams.filter(team => team.seed === 2);
+                const lowSeeds = filteredTeams.filter(team => team.seed === 3);
+                
+                // Shuffle each seed group separately
+                function shuffleArray(array) {
+                    for (let i = array.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [array[i], array[j]] = [array[j], array[i]];
+                    }
+                    return array;
+                }
+                
+                shuffleArray(topSeeds);
+                shuffleArray(midSeeds);
+                shuffleArray(lowSeeds);
+                
+                // Create more balanced groups by taking teams from each seed level
+                // Ensure all groups have 4 teams
+                
+                // Make sure we have enough teams 
+                while (topSeeds.length + midSeeds.length + lowSeeds.length < 15) { // Need 15 teams (+ player = 16 total)
+                    // Add more teams if needed
+                    const extraTeams = [
+                        {id: 'netherlands', name: 'Netherlands', seed: 1},
+                        {id: 'mexico', name: 'Mexico', seed: 2},
+                        {id: 'canada', name: 'Canada', seed: 2},
+                        {id: 'morocco', name: 'Morocco', seed: 3},
+                        {id: 'russia', name: 'Russia', seed: 2}
+                    ];
+                    
+                    for (const team of extraTeams) {
+                        if (team.id !== playerTeam) {
+                            if (team.seed === 1) topSeeds.push(team);
+                            else if (team.seed === 2) midSeeds.push(team);
+                            else lowSeeds.push(team);
+                        }
+                    }
+                }
+                
+                // For Group A, take one from each seed level plus one more
+                const groupA = [
+                    topSeeds.pop() || midSeeds.pop(), 
+                    midSeeds.pop() || lowSeeds.pop(), 
+                    lowSeeds.pop() || midSeeds.pop(), 
+                    topSeeds.pop() || midSeeds.pop() || lowSeeds.pop()
+                ];
+                
+                // For Group C, take one from each seed level plus one more
+                const groupC = [
+                    topSeeds.pop() || midSeeds.pop(), 
+                    midSeeds.pop() || lowSeeds.pop(), 
+                    lowSeeds.pop() || midSeeds.pop(), 
+                    topSeeds.pop() || midSeeds.pop() || lowSeeds.pop()
+                ];
+                
+                // For Group D, take one from each seed level plus one more
+                const groupD = [
+                    topSeeds.pop() || midSeeds.pop(), 
+                    midSeeds.pop() || lowSeeds.pop(), 
+                    lowSeeds.pop() || midSeeds.pop(), 
+                    topSeeds.pop() || midSeeds.pop() || lowSeeds.pop()
+                ];
+                
+                // For Group B, we need 3 teams (player will be the 4th)
+                const groupB = [
+                    topSeeds.pop() || midSeeds.pop(), 
+                    midSeeds.pop() || lowSeeds.pop(), 
+                    lowSeeds.pop() || midSeeds.pop()
+                ];
+                
+                // Create Group B with player in a random position
+                const playerPosition = Math.floor(Math.random() * 4); // 0,1,2,3
+                
+                // Create final Group B array with player in the random position
+                const finalGroupB = [...groupB]; // Copy the 3 random teams
+                finalGroupB.splice(playerPosition, 0, playerTeamObj); // Insert player at random position
+                
+                // Update tournamentTeams structure with new teams
+                tournamentTeams.groupA = groupA.map(team => team.id);
+                tournamentTeams.groupB = finalGroupB.map(team => team.id);
+                tournamentTeams.groupC = groupC.map(team => team.id);
+                tournamentTeams.groupD = groupD.map(team => team.id);
+                
+                // Update UI with new teams
+                updateGroupTeamsFromIds('group-a', groupA);
+                updateGroupTeamsFromIds('group-b', finalGroupB);
+                updateGroupTeamsFromIds('group-c', groupC);
+                updateGroupTeamsFromIds('group-d', groupD);
+                
+                // Highlight player's team in Group B
+                highlightPlayerTeam();
+                
+                // Store playerGroup for later reference
+                playerGroup = 'groupB';
+                
+                // Store teams in localStorage to prevent re-randomization
+                localStorage.setItem('tournamentTeams', JSON.stringify(tournamentTeams));
+            }
+            
+            // Update group teams in UI from IDs
+            function updateGroupTeamsFromIds(groupClass, teamIds) {
+                const groupElement = document.querySelector(`.${groupClass}`);
+                if (!groupElement) return;
+                
+                const teamElements = groupElement.querySelectorAll('.team');
+                
+                teamIds.forEach((team, index) => {
+                    if (teamElements[index]) {
+                        // Handle both string IDs and team objects
+                        const teamId = typeof team === 'object' ? team.id : team;
+                        
+                        teamElements[index].setAttribute('data-team', teamId);
+                        const img = teamElements[index].querySelector('img');
+                        if (img) {
+                            img.src = `../flags/${teamId}.png`;
+                            img.alt = typeof team === 'object' ? team.name : getTeamName(teamId);
+                        }
+                        
+                        const span = teamElements[index].querySelector('span');
+                        if (span) {
+                            span.textContent = typeof team === 'object' ? team.name : getTeamName(teamId);
+                        }
+                    }
+                });
+            }
+
+            // Add event listeners for stage navigation buttons
+            document.querySelectorAll('.stage-nav-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const stage = parseInt(this.getAttribute('data-stage'));
+                    console.log("Stage navigation button clicked:", stage);
+                    
+                    // Update active button
+                    document.querySelectorAll('.stage-nav-button').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Map stage buttons to bracket positions
+                    // This is where you can adjust which position each button scrolls to
+                    let targetPosition;
+                    
+                    switch(stage) {
+                        case 0: // Groups & Quarters
+                            targetPosition = 0;
+                            break;
+                        case 1: // Semi Finals
+                            targetPosition = 1;
+                            break;
+                        case 2: // Final
+                            targetPosition = 2;
+                            // Ensure the final container is visible
+                            document.querySelector('.final-container').classList.add('visible');
+                            break;
+                        case 3: // Right bracket
+                            targetPosition = 3;
+                            break;
+                        default:
+                            targetPosition = stage;
+                    }
+                    
+                    // Scroll to the selected stage
+                    scrollToPosition(targetPosition);
+                    
+                    // Update current position
+                    currentPosition = targetPosition;
+                    updatePositionIndicator();
+                });
+            });
+            
+            // Function to update stage navigation based on current position
+            function updateStageNavigation() {
+                document.querySelectorAll('.stage-nav-button').forEach(button => {
+                    const btnStage = parseInt(button.getAttribute('data-stage'));
+                    
+                    // Match current position to the right button
+                    // Note: position 2 corresponds to both the Final button (stage 2) and 
+                    // the right bracket button (stage 3) depending on which tab is active
+                    if (btnStage === currentPosition || 
+                        (currentPosition === 2 && (btnStage === 2 || btnStage === 3))) {
+                        button.classList.add('active');
+                    } else {
+                        button.classList.remove('active');
+                    }
+                });
+            }
+        });
+
+        // Initialize and play tournament theme music
+        const tournamentTheme = document.getElementById('tournament-theme');
+        
+        // Set volume
+        tournamentTheme.volume = 0.5;
+        
+        // Function to play tournament theme
+        function playTournamentTheme() {
+            const playPromise = tournamentTheme.play();
+            
+            // Handle play promise to avoid uncaught promise errors
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("Audio play error:", error);
+                    
+                    // If autoplay was prevented, add a click handler to start audio
+                    document.body.addEventListener('click', function audioClickHandler() {
+                        tournamentTheme.play().catch(e => console.log("Still can't play audio:", e));
+                        document.body.removeEventListener('click', audioClickHandler);
+                    }, { once: true });
+                });
+            }
+        }
+        
+        // Stop tournament theme when leaving the page
+        function stopTournamentTheme() {
+            tournamentTheme.pause();
+            tournamentTheme.currentTime = 0;
+        }
+        
+        // Play theme when page loads
+        window.addEventListener('load', playTournamentTheme);
+        
+        // Stop music when navigating away
+        window.addEventListener('beforeunload', stopTournamentTheme);
+        
+        // Stop music when starting a match
+        document.addEventListener('startmatch', stopTournamentTheme);
+        
+        // Resume music when returning from a match
+        document.addEventListener('matchend', playTournamentTheme);
+
+        // Start a match with selected teams
+        function startMatch(playerTeam, opponentTeam) {
+            if (!playerTeam) {
+                return;
+            }
+            
+            // Stop tournament music by dispatching custom event
+            document.dispatchEvent(new CustomEvent('startmatch'));
+            
+            // Store selected teams in localStorage
+            localStorage.setItem('selectedPlayerFlag', playerTeam);
+            localStorage.setItem('selectedOpponentFlag', opponentTeam);
+            localStorage.setItem('tournamentActive', 'true');
+            localStorage.setItem('currentTournamentStage', tournamentStage);
+            localStorage.setItem('tournamentData', JSON.stringify({
+                stage: tournamentStage,
+                playerTeam: playerTeam,
+                groups: groups,
+                knockoutTeams: knockoutTeams,
+                matchResults: matchResults
+            }));
+            
+            // Redirect to match page
+            window.location.href = '../match.html';
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
