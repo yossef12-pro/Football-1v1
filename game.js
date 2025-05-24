@@ -65,7 +65,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const playAgainButton = document.getElementById('play-again');
     if (playAgainButton) {
         console.log("Attaching event listener to play-again button");
-        playAgainButton.addEventListener('click', function() {
+        
+        // Remove any existing event listeners to prevent duplicates
+        const newButton = playAgainButton.cloneNode(true);
+        playAgainButton.parentNode.replaceChild(newButton, playAgainButton);
+        
+        newButton.addEventListener('click', function() {
+            console.log("Play again button clicked");
+            
             // Check if we're in tournament mode
             const urlParams = new URLSearchParams(window.location.search);
             const mode = urlParams.get('mode');
@@ -250,15 +257,11 @@ function startSingleMatch() {
     if (mode === 'tournament') {
         // Use the opponent that was already set
         player2Flag = localStorage.getItem('opponentTeam') || player2Flag;
-        console.log("Tournament mode - using stored opponent:", player2Flag);
     } else {
         // Normal mode - select random opponent
         const availableFlags = flags.filter(flag => flag !== player1Flag);
         player2Flag = availableFlags[Math.floor(Math.random() * availableFlags.length)];
     }
-
-    console.log("Player 1 flag:", player1Flag);
-    console.log("Player 2 flag:", player2Flag);
 
     window.selectedPlayerFlag = player1Flag;
     window.selectedOpponentFlag = player2Flag;
@@ -267,12 +270,20 @@ function startSingleMatch() {
     document.getElementById('player1-flag-small').style.backgroundImage = `url('flags/${player1Flag}.png')`;
     document.getElementById('player2-flag-small').style.backgroundImage = `url('flags/${player2Flag}.png')`;
 
+    // Update player info displays
+    updatePlayerInfo(player1Flag, player2Flag);
+
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('game-screen').style.display = 'flex';
 
     // Start the game
     if (typeof window.startPhaserGame === 'function') {
         window.startPhaserGame();
+        
+        // Apply performance mode if enabled
+        if (performanceModeEnabled) {
+            setTimeout(enablePerformanceMode, 100); // Slight delay to ensure game is initialized
+        }
     } else {
         console.error("startPhaserGame function not found!");
     }
@@ -425,26 +436,35 @@ function showEndScreen(winnerFlag, winnerText, finalScore) {
         finalScoreElement.textContent = finalScore;
     }
 
-    // Check if we're in tournament mode
-    const urlParams = new URLSearchParams(window.location.search);
-    const mode = urlParams.get('mode');
+    // Get the play-again button
+    const playAgainButton = document.getElementById('play-again');
+    if (playAgainButton) {
+        // Check if we're in tournament mode
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
 
-    // Change button text if in tournament mode
-    if (mode === 'tournament') {
-        const playAgainButton = document.getElementById('play-again');
-        const tournamentStage = localStorage.getItem('tournamentStage');
-
-        if (playAgainButton) {
+        if (mode === 'tournament') {
+            const tournamentStage = localStorage.getItem('tournamentStage');
+            
             // Check if player won or lost
             const player1Score = parseInt(document.getElementById('player1-score').textContent);
             const player2Score = parseInt(document.getElementById('player2-score').textContent);
             const playerWon = player1Score > player2Score;
 
-            // If player lost, show "Leave" in Arabic
+            // If player lost, show "Leave" in Arabic and set up direct handler
             if (!playerWon) {
                 playAgainButton.textContent = 'مغادرة'; // Arabic word for "Leave"
+                
+                // Remove existing listeners and add direct handler for leaving
+                const newButton = playAgainButton.cloneNode(true);
+                playAgainButton.parentNode.replaceChild(newButton, playAgainButton);
+                
+                newButton.addEventListener('click', function() {
+                    console.log("Tournament leave button clicked - redirecting to main menu");
+                    window.location.href = 'index.html';
+                });
             } else {
-                // Set appropriate button text based on current tournament stage
+                // Player won - set appropriate button text based on current tournament stage
                 if (tournamentStage === '0') {
                     playAgainButton.textContent = 'Quarter-Finals';
                 } else if (tournamentStage === '1') {
@@ -456,7 +476,52 @@ function showEndScreen(winnerFlag, winnerText, finalScore) {
                 } else {
                     playAgainButton.textContent = 'Back to Tournament';
                 }
+                
+                // Remove existing listeners and add handler to return to tournament page
+                const newButton = playAgainButton.cloneNode(true);
+                playAgainButton.parentNode.replaceChild(newButton, playAgainButton);
+                
+                newButton.addEventListener('click', function() {
+                    console.log("Tournament progression button clicked - returning to tournament page");
+                    
+                    // Get teams for the previous match
+                    const playerTeam = localStorage.getItem('playerTeam');
+                    const opponentTeam = localStorage.getItem('opponentTeam');
+                    
+                    // Get the final scores
+                    const player1Score = parseInt(document.getElementById('player1-score').textContent);
+                    const player2Score = parseInt(document.getElementById('player2-score').textContent);
+                    
+                    // Create match result object
+                    const matchResult = {
+                        playerTeam: playerTeam,
+                        opponentTeam: opponentTeam,
+                        playerScore: player1Score,
+                        opponentScore: player2Score,
+                        timestamp: Date.now()
+                    };
+                    
+                    console.log("Saving match result to localStorage:", matchResult);
+                    localStorage.setItem('lastMatchResult', JSON.stringify(matchResult));
+                    
+                    // Redirect back to tournament page with scores in URL
+                    const tournamentPath = 'tournament/tournament.html?playerScore=' + player1Score + '&opponentScore=' + player2Score;
+                    console.log("Navigating to:", tournamentPath);
+                    window.location.href = tournamentPath;
+                });
             }
+        } else {
+            // For single match mode, always show "Leave" in both languages
+            playAgainButton.textContent = 'Leave / مغادرة'; // "Leave" in English and Arabic
+            
+            // Remove any existing listeners and add one that goes to main menu
+            const newButton = playAgainButton.cloneNode(true);
+            playAgainButton.parentNode.replaceChild(newButton, playAgainButton);
+            
+            newButton.addEventListener('click', function() {
+                console.log("Leave button clicked - returning to main menu");
+                resetGame();
+            });
         }
     }
 
@@ -469,6 +534,8 @@ function showEndScreen(winnerFlag, winnerText, finalScore) {
 }
 
 function resetGame() {
+    console.log("Resetting game state");
+    
     // Reset game state
     score = [0, 0];
     gameTime = 60;
@@ -477,6 +544,11 @@ function resetGame() {
     if (window.stopPhaserGame) {
         window.stopPhaserGame();
     }
+    
+    // Reset the score display
+    document.getElementById('player1-score').textContent = "0";
+    document.getElementById('player2-score').textContent = "0";
+    document.getElementById('timer').textContent = "1:00";
 
     // Hide end screen
     document.getElementById('end-screen').style.display = 'none';
@@ -512,17 +584,12 @@ function resetGame() {
             window.location.href = tournamentPath;
         }, 100);
     } else {
-        // Regular reset to start screen
+        // For regular game mode, always return to main menu (start screen)
+        console.log("Returning to main menu");
+        document.getElementById('game-screen').style.display = 'none';
         document.getElementById('start-screen').style.display = 'flex';
         document.querySelector('.start-screen-content').style.display = 'flex';
         document.querySelector('.team-select-card').style.display = 'none';
-
-        // Restart the game after a short delay to ensure cleanup is complete
-        setTimeout(() => {
-            if (window.startPhaserGame) {
-                window.startPhaserGame();
-            }
-        }, 100);
     }
 }
 
@@ -691,7 +758,6 @@ function handleGameEnd() {
     const urlParams = new URLSearchParams(window.location.search);
     const mode = urlParams.get('mode');
 
-
     if (mode === 'tournament') {
         console.log("Tournament mode: showing end screen");
 
@@ -723,22 +789,33 @@ function handleGameEnd() {
             // Show end screen
             showEndScreen(winnerFlag, winnerText, finalScore);
 
-            // Change the button text to "Leave" if player lost
+            // If player lost, reset tournament data immediately
             if (!playerWon) {
-                const playAgainButton = document.getElementById('play-again');
-                if (playAgainButton) {
-                    playAgainButton.textContent = "مغادرة"; // Arabic word for "Leave"
-                }
-
-                // Set a flag to indicate player has lost and reset tournament progress
-                localStorage.setItem('tournamentLost', 'true');
-
+                console.log("Player lost tournament match - resetting tournament data");
                 // Reset tournament data to ensure progression stops
                 localStorage.removeItem('tournamentTeams');
                 localStorage.removeItem('knockoutTeams');
                 localStorage.removeItem('tournamentStage');
+                localStorage.removeItem('hasVisitedTournament');
                 localStorage.removeItem('currentMatch');
                 localStorage.removeItem('lastMatchResult');
+                localStorage.setItem('tournamentLost', 'true');
+            }
+
+            // Reattach "مغادرة" button event listener in case original listener isn't working
+            const playAgainButton = document.getElementById('play-again');
+            if (playAgainButton && !playerWon) {
+                // Set button text to "مغادرة" (Leave in Arabic)
+                playAgainButton.textContent = "مغادرة";
+                
+                // Remove existing listeners and add new one
+                const newButton = playAgainButton.cloneNode(true);
+                playAgainButton.parentNode.replaceChild(newButton, playAgainButton);
+                
+                newButton.addEventListener('click', function() {
+                    console.log("Tournament leave button clicked");
+                    window.location.href = 'index.html';
+                });
             }
         } else {
             console.error("Missing player or opponent team in localStorage");
@@ -751,5 +828,46 @@ function handleGameEnd() {
 
         showEndScreen(winnerFlag, winnerText, finalScore);
     }
+}
+
+// Function to update player info (names, images)
+function updatePlayerInfo(player1Flag, player2Flag) {
+    // Format flag names to proper team names
+    const formatTeamName = (flagName) => {
+        // Remove any trailing dash
+        let name = flagName.replace(/-$/, '');
+        
+        // Convert dash to space and capitalize each word
+        name = name.replace(/-/g, ' ')
+                   .split(' ')
+                   .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                   .join(' ');
+                   
+        // Handle special cases
+        if (name === 'United Kingdom') return 'UK';
+        if (name === 'Saudiarabia') return 'Saudi Arabia';
+        
+        return name;
+    };
+    
+    // Update player names
+    const player1Name = formatTeamName(player1Flag);
+    const player2Name = formatTeamName(player2Flag);
+    
+    // Update the DOM
+    const player1NameEl = document.querySelector('.player1-info .player-name');
+    const player2NameEl = document.querySelector('.player2-info .player-name');
+    
+    if (player1NameEl) player1NameEl.textContent = player1Name;
+    if (player2NameEl) player2NameEl.textContent = player2Name;
+    
+    // Update player images if we have custom images for these teams
+    // For now, use default styling from CSS
+    const player1ImageEl = document.querySelector('.player1-image');
+    const player2ImageEl = document.querySelector('.player2-image');
+    
+    // You could add custom player images here later
+    // if (player1ImageEl) player1ImageEl.style.backgroundImage = `url('players/${player1Flag}.jpg')`;
+    // if (player2ImageEl) player2ImageEl.style.backgroundImage = `url('players/${player2Flag}.jpg')`;
 }
 

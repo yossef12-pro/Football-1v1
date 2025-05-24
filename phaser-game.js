@@ -240,9 +240,9 @@ function initPhysics() {
     // Create engine with improved settings for high-speed collisions
     window.game.engine = Engine.create({
         enableSleeping: false,
-        constraintIterations: 8,
-        positionIterations: 16,
-        velocityIterations: 16
+        constraintIterations: 2,
+        positionIterations: 6,
+        velocityIterations: 4
     });
 
     // Set engine properties
@@ -250,7 +250,7 @@ function initPhysics() {
 
     window.game.world = window.game.engine.world;
 
-    // Create renderer
+    // Create renderer with optimized settings
     window.game.render = Render.create({
         element: document.getElementById('game-field'),
         engine: window.game.engine,
@@ -2077,16 +2077,29 @@ function updateTimerDisplay() {
 
 // End the game
 function endGame() {
+    // Only proceed if the game is still active
+    if (!window.game || !window.game.gameActive) return;
+    
+    console.log("Ending game...");
+    
+    // Mark game as inactive first to prevent further updates
     window.game.gameActive = false;
 
     // Stop match background music
     stopSound(matchSound);
 
-    // Clear intervals
-    if (window.game.aiUpdateInterval) clearInterval(window.game.aiUpdateInterval);
-    if (window.game.timerInterval) clearInterval(window.game.timerInterval);
+    // Clear intervals immediately
+    if (window.game.aiUpdateInterval) {
+        clearInterval(window.game.aiUpdateInterval);
+        window.game.aiUpdateInterval = null;
+    }
+    
+    if (window.game.timerInterval) {
+        clearInterval(window.game.timerInterval);
+        window.game.timerInterval = null;
+    }
 
-    // Determine winner
+    // Get final scores before any potential state changes
     const player1Score = window.game.score[0];
     const player2Score = window.game.score[1];
     let winnerText = '';
@@ -2106,49 +2119,96 @@ function endGame() {
     // Format the final score
     const finalScore = `${player1Score} - ${player2Score}`;
 
-    // Use the enhanced showEndScreen function
-    if (typeof showEndScreen === 'function') {
-        showEndScreen(winnerFlag, winnerText, finalScore);
-    } else {
-        // Fallback to direct DOM manipulation if function not available
-        document.getElementById('winner-text').textContent = winnerText;
-        document.getElementById('winner-flag').style.backgroundImage = `url('flags/${winnerFlag}.png')`;
-        document.getElementById('final-score').textContent = finalScore;
-
-        // Show end screen
-        document.getElementById('game-screen').style.display = 'none';
-        document.getElementById('end-screen').style.display = 'flex';
+    // Pause physics engine to prevent further updates
+    if (window.game.runner) {
+        Runner.stop(window.game.runner);
     }
+    
+    // Immediately stop physics calculations to prevent further console logs
+    if (window.game.engine) {
+        Events.off(window.game.engine);
+    }
+
+    // Use the enhanced showEndScreen function with a slight delay to ensure clean transition
+    setTimeout(() => {
+        if (typeof showEndScreen === 'function') {
+            showEndScreen(winnerFlag, winnerText, finalScore);
+        } else {
+            // Fallback to direct DOM manipulation if function not available
+            document.getElementById('winner-text').textContent = winnerText;
+            document.getElementById('winner-flag').style.backgroundImage = `url('flags/${winnerFlag}.png')`;
+            document.getElementById('final-score').textContent = finalScore;
+
+            // Show end screen
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('end-screen').style.display = 'flex';
+        }
+    }, 100);
 }
 
 // Clean up resources when game is stopped
 window.stopPhaserGame = function() {
     if (window.game) {
+        console.log("Stopping Phaser game and cleaning up resources...");
+        
         // Stop all game audio
         try {
             if (matchSound) {
                 matchSound.pause();
+                matchSound.currentTime = 0;
                 matchSound.src = '';
             }
             if (kickSound) {
                 kickSound.pause();
+                kickSound.currentTime = 0;
                 kickSound.src = '';
             }
             if (goalSound) {
                 goalSound.pause();
+                goalSound.currentTime = 0;
                 goalSound.src = '';
             }
+            
+            // Reset audio initialized flag to ensure proper reinitialization on next game
+            audioInitialized = false;
         } catch (e) {
             console.log("Audio cleanup error:", e);
         }
 
-        // Clear intervals
-        if (window.game.aiUpdateInterval) clearInterval(window.game.aiUpdateInterval);
-        if (window.game.timerInterval) clearInterval(window.game.timerInterval);
+        // Clear all intervals
+        if (window.game.aiUpdateInterval) {
+            clearInterval(window.game.aiUpdateInterval);
+            window.game.aiUpdateInterval = null;
+        }
+        if (window.game.timerInterval) {
+            clearInterval(window.game.timerInterval);
+            window.game.timerInterval = null;
+        }
 
-        // Remove event listeners
-        document.removeEventListener('keydown', function() {});
-        document.removeEventListener('keyup', function() {});
+        // Stop Matter.js engine and renderer
+        if (window.game.engine) {
+            Engine.clear(window.game.engine);
+            if (window.game.runner) {
+                Runner.stop(window.game.runner);
+                window.game.runner = null;
+            }
+        }
+        
+        if (window.game.render) {
+            Render.stop(window.game.render);
+            window.game.render = null;
+        }
+
+        // Remove world objects
+        if (window.game.world) {
+            World.clear(window.game.world);
+            window.game.world = null;
+        }
+
+        // Remove all event listeners from engine
+        if (window.game.engine && window.game.engine.events) {
+            Events.off(window.game.engine);
+        }
 
         // Clean up 2D textured ball if it exists
         if (window.game.ball2D) {
@@ -2161,23 +2221,20 @@ window.stopPhaserGame = function() {
             ball2DInstance = null;
         }
 
-        // Stop renderer
-        if (window.game.render) Render.stop(window.game.render);
+        // Remove all visual elements from the DOM
+        document.querySelectorAll('.ball-overlay, .ball-shadow, .ball-trail, .boost-hint, .key-hint, .player, .ai-backoff-indicator, .ai-timeout-indicator, .impact-effect').forEach(el => {
+            if (el && el.parentNode) {
+                el.parentNode.removeChild(el);
+            }
+        });
 
-        // Stop runner
-        if (window.game.runner) Runner.stop(window.game.runner);
-
-        // Clear engine
-        if (window.game.engine) Engine.clear(window.game.engine);
-
-        // Remove DOM elements
-        document.querySelectorAll('.ball-overlay, .ball-shadow, .ball-trail, .boost-hint, .player, .ai-backoff-indicator, .ai-timeout-indicator').forEach(el => el.remove());
-
-        // Reset audio initialized flag to ensure proper reinitialization
-        audioInitialized = false;
-
-        // Clear game object
+        // Set game as inactive
+        window.game.gameActive = false;
+        
+        // Nullify game object and all its properties
         window.game = null;
+        
+        console.log("Game cleanup complete");
     }
 };
 

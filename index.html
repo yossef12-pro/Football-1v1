@@ -6,6 +6,7 @@
     <title>Football Physics</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.18.0/matter.min.js"></script>
+    <script src="flag-display.js" defer></script>
 </head>
 <body>
     <div class="game-container">
@@ -52,6 +53,22 @@
                     <div id="player2-flag-small" class="flag-small"></div>
                 </div>
             </div>
+            
+            <!-- Player info bar with middle screen -->
+            <div class="user-info-bar">
+                <div class="user-info user1-info">
+                    <div class="user-image user1-image"></div>
+                    <div class="user-name">Mohammed</div>
+                </div>
+                <div class="middle-screen">
+                    <div class="flag-display"></div>
+                </div>
+                <div class="user-info user2-info">
+                    <div class="user-image user2-image"></div>
+                    <div class="user-name">Ziad</div>
+                </div>
+            </div>
+            
             <div class="field-container">
                 <!-- Left stand with digital display -->
                 <div class="stand stand-left">
@@ -265,6 +282,21 @@
                 <div class="flash3"></div>
                 <div class="flash4"></div>
                 <div class="flash5"></div>
+            </div>
+            
+            <!-- Bottom screen below the field -->
+            <div class="bottom-screen-container">
+                <div class="bottom-screen">
+                    <div class="screen-content screen-content-bottom">
+                        <!-- Just 6 instances of the 3-logo sequence for a clean loop -->
+                        <div class="content-item">
+                        <img src="bottom screen/adidas.png" alt="Adidas" class="sponsor-logo">
+                        <img src="bottom screen/nike.jpg" alt="Nike" class="sponsor-logo">
+                        <img src="bottom screen/puma.png" alt="Puma" class="sponsor-logo puma-logo">
+                    </div>
+                        
+                    </div>
+                </div>
             </div>
         </div>
 

@@ -908,24 +908,12 @@ h1, h2 {
     border-bottom: 2px solid #fff;
     overflow: hidden;
     box-shadow: inset 0 0 40px rgba(0,0,0,0.3);
-    background-color: #1a6e1a; /* Fallback color */
+    background-color: #1a6e1a; /* Fallback color if image fails to load */
     position: relative;
     z-index: 0; /* Base layer */
 }
 
-/* Field image styling */
-.field-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 1;
-    pointer-events: none; /* Make the image non-interactive */
-    user-select: none; /* Prevent selection */
-    -webkit-user-drag: none; /* Prevent dragging in webkit browsers */
-}
+
 
 /* Matter.js canvas styling */
 #game-field canvas {
@@ -1405,8 +1393,10 @@ h1, h2 {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 2; /* Above the field image (z-index: 1) */
+    z-index: 2; /* Above the field background */
 }
+
+
 
 .center-line {
     position: absolute;
@@ -2080,30 +2070,449 @@ h1, h2 {
     .flag-option { width: 8vw; height: 8vw; }
 }
 
-/* Weather Effects */
-.weather-overlay {
+/* Field image styling */
+.field-image {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    pointer-events: none; /* Make the image non-interactive */
+    user-select: none; /* Prevent selection */
+    -webkit-user-drag: none; /* Prevent dragging in webkit browsers */
+}
+
+/* Player info bar styling */
+.user-info-bar {
+    width: 100%;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 5px;
+    margin-bottom: 2px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Player info section */
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 70px;
+}
+
+/* Player images */
+.user-image {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #333;
+    border: 2px solid #fff;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    background-size: cover;
+    background-position: center;
+    margin-bottom: 3px;
+}
+
+.user1-image {
+    background-image: url('users/mohammed.jpg');
+    background-color: #007bff;
+}
+
+.user2-image {
+    background-image: url('users/ziad.jpg');
+    background-color: #dc3545;
+}
+
+/* Player names */
+.user-name {
+    color: #fff;
+    font-size: 10px;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* Middle screen */
+.middle-screen {
+    width: 150px;
+    height: 40px;
+    background-color: rgba(0, 30, 60, 0.8);
+    overflow: hidden;
+    position: relative;
+    border-radius: 4px;
+    box-shadow: 
+        inset 0 0 10px rgba(0, 120, 255, 0.4),
+        0 0 5px rgba(0, 120, 255, 0.3);
+    border: 1px solid rgba(0, 100, 255, 0.3);
+    /* Add subtle LED pixel effect */
+    background-image:
+        radial-gradient(
+            circle at 50% 50%,
+            rgba(0, 150, 255, 0.1) 0%,
+            rgba(0, 0, 0, 0) 1px
+        );
+    background-size: 3px 3px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Flag display in middle screen */
+.flag-display {
+    width: 60px;
+    height: 35px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 3px;
+    box-shadow: 0 0 8px rgba(0, 140, 255, 0.7);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease-out;
+}
+
+/* Flag shine effect */
+.flag-display::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 150%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: skewX(-20deg);
+    animation: flag-shine 4s infinite ease-in-out;
+}
+
+@keyframes flag-shine {
+    0% { left: -150%; }
+    30%, 100% { left: 150%; }
+}
+
+/* Adding a transition class for flag change effect */
+.flag-display.flag-transition {
+    animation: flag-transition 0.5s ease-out;
+}
+
+@keyframes flag-transition {
+    0% { filter: brightness(1); transform: scale(1); }
+    10% { filter: brightness(1.5) contrast(1.2); transform: scale(1.05); }
+    20% { filter: brightness(0.8) contrast(0.9); transform: scale(0.98); }
+    30% { filter: brightness(1.3) contrast(1.1); transform: scale(1.02); }
+    40% { filter: brightness(0.9) contrast(1); transform: scale(0.99); }
+    50% { filter: brightness(1.4) contrast(1.2); transform: scale(1.03); }
+    60% { filter: brightness(0.8) contrast(0.9); transform: scale(0.97); }
+    70% { filter: brightness(1.5) contrast(1.1); transform: scale(1.05); }
+    80% { filter: brightness(0.9) contrast(1); transform: scale(0.98); }
+    100% { filter: brightness(1) contrast(1); transform: scale(1); }
+}
+
+/* Screen glare/reflection on flag */
+.flag-display::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 150%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: skewX(-20deg);
+    animation: flag-shine 4s infinite ease-in-out;
+}
+
+/* Flag transition animations */
+@keyframes flag-flicker {
+    0%, 95%, 100% { background: rgba(255, 255, 255, 0); }
+    96% { background: rgba(255, 255, 255, 0.3); }
+    97% { background: rgba(255, 255, 255, 0.1); }
+    98% { background: rgba(255, 255, 255, 0.4); }
+    99% { background: rgba(255, 255, 255, 0.2); }
+}
+
+@keyframes flag-shine {
+    0% { left: -150%; }
+    30%, 100% { left: 150%; }
+}
+
+/* Content items for middle screen */
+.middle-screen .content-item {
+    min-width: 40px;
+    height: 40px;
+    margin: 0 5px;
+    flex-shrink: 0;
+}
+
+/* Middle screen image styling */
+.middle-screen .content-item img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 0 3px rgba(0, 162, 255, 0.7));
+}
+
+/* Screen content for middle screen */
+.screen-content-middle {
+    display: none; /* Hide the scrolling content since we're using flag display now */
+}
+
+/* Bottom screen container */
+.bottom-screen-container {
+    width: 100%;
+    height: 60px; /* Increased from 40px */
+    background: rgba(0, 0, 0, 0.8); /* Darker background for better contrast */
+    padding: 0; /* Removed padding */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 0; /* Removed margin */
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.5); /* Add shadow at top edge */
+}
+
+/* Bottom screen */
+.bottom-screen {
+    width: 100%; /* Changed from 95% to 100% */
+    height: 60px; /* Increased from 50px */
+    background-color: rgba(0, 45, 90, 0.9); /* Darker, more saturated blue */
+    overflow: hidden;
+    position: relative;
+    border-radius: 0; /* Removed border radius */
+    box-shadow: 
+        inset 0 0 10px rgba(0, 140, 255, 0.6),
+        0 0 8px rgba(0, 140, 255, 0.5);
+    border: none; /* Removed border */
+    /* LED pixel effect */
+    background-image:
+        radial-gradient(
+            circle at 50% 50%,
+            rgba(0, 180, 255, 0.2) 0%,
+            rgba(0, 0, 0, 0) 1px
+        );
+    background-size: 2px 2px; /* Smaller pixels */
+}
+
+/* Bottom screen content */
+.screen-content-bottom {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 100%;
+    animation: scroll-left-bottom 12s linear infinite; /* Animation for the single container */
+    width: 100%; /* Just using 100% width since we have one container */
+}
+
+/* Circle images in content items */
+.circle-img {
+    border-radius: 50% !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 0 4px rgba(0, 180, 255, 0.6) !important;
+}
+
+/* Content items for bottom screen */
+.bottom-screen .content-item {
+    width: 100%; /* Take full width of the container */
+    padding: 0 10px; /* Small padding */
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Evenly space the logos */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+/* Bottom screen image styling */
+.bottom-screen .content-item img {
+    width: auto; /* Auto width to preserve aspect ratio */
+    height: 50px; /* Match the sponsor-logo height */
+    object-fit: contain;
+    display: inline-block;
+    filter: drop-shadow(0 0 3px rgba(0, 180, 255, 0.8));
+}
+
+/* Bottom screen scrolling animation */
+@keyframes scroll-left-bottom {
+    0% {
+        transform: translateX(100%);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+/* Screen glow effects */
+.bottom-screen::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+        /* LED pixels */
+        repeating-linear-gradient(
+            to right,
+            transparent,
+            transparent 2px,
+            rgba(0, 100, 255, 0.05) 2px,
+            rgba(0, 100, 255, 0.05) 3px
+        ),
+        repeating-linear-gradient(
+            to bottom,
+            transparent,
+            transparent 2px,
+            rgba(0, 100, 255, 0.05) 2px,
+            rgba(0, 100, 255, 0.05) 3px
+        ),
+        /* Screen glare */
+        linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.15),
+            rgba(255, 255, 255, 0) 20%,
+            rgba(255, 255, 255, 0) 80%,
+            rgba(255, 255, 255, 0.15)
+        );
     pointer-events: none;
-    z-index: 15;
-    opacity: 0;
-    display: none; /* Hide weather effects */
+    z-index: 5;
+    animation: screen-flicker-bottom 10s infinite;
 }
 
-.rain-effect, .rain-effect.heavy, .puddle, .weather-active .puddle {
-    display: none; /* Hide all rain effects */
+/* Unique flicker animation for bottom screen */
+@keyframes screen-flicker-bottom {
+    0%, 100% { opacity: 1; }
+    94% { opacity: 1; }
+    94.5% { opacity: 0.6; }
+    95% { opacity: 1; }
+    97% { opacity: 1; }
+    97.5% { opacity: 0.8; }
+    98% { opacity: 1; }
 }
 
-/* Enhanced stadium lighting effects */
-.stadium-lights {
-    display: none; /* Hide stadium lights */
+/* Pulsing glow for bottom screen */
+.bottom-screen {
+    animation: bottom-screen-glow 4s ease-in-out infinite alternate;
 }
 
-/* Hide 2D ball when 3D is active */
-.ball-overlay.hidden {
-    opacity: 0;
-    visibility: hidden;
+@keyframes bottom-screen-glow {
+    0% {
+        box-shadow: 
+            inset 0 0 8px rgba(0, 140, 255, 0.6),
+            0 0 6px rgba(0, 140, 255, 0.5);
+    }
+    100% {
+        box-shadow: 
+            inset 0 0 15px rgba(0, 180, 255, 0.8),
+            0 0 12px rgba(0, 180, 255, 0.7);
+    }
+}
+
+/* Text elements in bottom screen */
+.info-text {
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 0 0 4px rgba(0, 140, 255, 0.8);
+    white-space: nowrap;
+}
+
+/* Sponsor logos in bottom screen */
+.sponsor-logo {
+    height: 50px !important;
+    width: auto !important;
+    max-width: 30%; /* Limit width to ensure all three fit */
+    background-color: transparent;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6)) !important;
+    margin: 0 20px; /* Space between logos */
+    margin-bottom: 30px; /* Restore the margin-bottom */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover effect */
+}
+
+.sponsor-logo:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
+}
+
+/* Bottom screen scrolling animation */
+@keyframes scroll-left-bottom {
+    0% {
+        transform: translateX(100%);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+/* Sponsor banner below the field */
+.sponsor-banner {
+    width: 100%;
+    height: 30px;
+    background: rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+    position: relative;
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+.sponsor-banner-content {
+    display: flex;
+    height: 100%;
+    animation: sponsor-scroll 20s linear infinite;
+    white-space: nowrap;
+}
+
+.sponsor-item {
+    flex: 0 0 auto;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    margin: 0 30px;
+}
+
+.sponsor-item img {
+    height: 20px;
+    object-fit: contain;
+    background-color: white;
+    border-radius: 4px;
+    padding: 3px;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes sponsor-scroll {
+    0% {
+        transform: translateX(100%);
+    }
+    100% {
+        transform: translateX(-180%);
+    }
+}
+
+/* Specific styling for Puma logo */
+.puma-logo {
+    background-color: white !important;
+    padding: 5px !important;
+    border-radius: 5px !important;
+}
+
+/* Remove the previously added styling that we don't need anymore */
+.puma-placeholder {
+    display: none;
+}
+
+img[src*="puma.png"] {
+    display: inline-block;
 }
