@@ -380,7 +380,7 @@ function createConfetti() {
         confetti.style.left = `${left}%`;
         confetti.style.top = '-20px';
         confetti.style.position = 'absolute';
-        confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+        confetti.style.borderRadius = '0'; // Always make them square
         confetti.style.opacity = Math.random() * 0.5 + 0.5; // 0.5-1
 
         // Apply animation

@@ -9,71 +9,80 @@ const flagList = [
     'south-korea', 'palestine'
 ];
 
-// Variables to control the flag display
-let currentFlagIndex = 0;
+// Variables to control the flag displays
+let currentFlagIndices = [0, 5, 10]; // Start with different flags for each display
 let flagChangeInterval;
 let isTransitioning = false;
 
-// Initialize flag display when DOM is loaded
+// Initialize flag displays when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    initFlagDisplay();
+    initFlagDisplays();
 });
 
 /**
- * Initialize the flag display in the middle screen
+ * Initialize all flag displays in the middle screen
  */
-function initFlagDisplay() {
-    // Get the flag display element
-    const flagDisplay = document.querySelector('.flag-display');
-    if (!flagDisplay) return;
+function initFlagDisplays() {
+    // Get all flag display elements
+    const flagDisplays = document.querySelectorAll('.flag-display');
+    if (!flagDisplays.length) return;
 
-    // Set the initial flag
-    updateFlagDisplay();
+    // Set the initial flags
+    updateFlagDisplays();
 
     // Start the interval to change flags
     flagChangeInterval = setInterval(() => {
-        changeFlag();
-    }, 3000);  // Change flag every 3 seconds
+        changeFlags();
+    }, 3000);  // Change flags every 3 seconds
 }
 
 /**
- * Update the flag display with the current flag
+ * Update all flag displays with current flags
  */
-function updateFlagDisplay() {
-    const flagDisplay = document.querySelector('.flag-display');
-    if (!flagDisplay) return;
+function updateFlagDisplays() {
+    const flagDisplays = document.querySelectorAll('.flag-display');
+    if (!flagDisplays.length) return;
 
-    // Get the current flag name
-    const currentFlag = flagList[currentFlagIndex];
-    
-    // Update the background image
-    flagDisplay.style.backgroundImage = `url('flags/${currentFlag}.png')`;
+    // Update each flag display
+    flagDisplays.forEach((display, index) => {
+        // Get the current flag name for this display
+        const currentFlag = flagList[currentFlagIndices[index]];
+        
+        // Update the background image
+        display.style.backgroundImage = `url('flags/${currentFlag}.png')`;
+    });
 }
 
 /**
- * Change to the next flag with transition effects
+ * Change to the next set of flags with transition effects
  */
-function changeFlag() {
+function changeFlags() {
     // Prevent multiple transitions at once
     if (isTransitioning) return;
     isTransitioning = true;
 
-    // Trigger the flicker effect by adding and removing a class
-    const flagDisplay = document.querySelector('.flag-display');
-    if (!flagDisplay) return;
+    // Get all flag displays
+    const flagDisplays = document.querySelectorAll('.flag-display');
+    if (!flagDisplays.length) return;
     
-    // Add the transition class
-    flagDisplay.classList.add('flag-transition');
+    // Add the transition class to all displays
+    flagDisplays.forEach(display => {
+        display.classList.add('flag-transition');
+    });
     
-    // After a short delay, change the flag and remove the transition class
+    // After a short delay, change the flags and remove the transition class
     setTimeout(() => {
-        // Move to the next flag
-        currentFlagIndex = (currentFlagIndex + 1) % flagList.length;
-        updateFlagDisplay();
+        // Move to the next flags, ensuring all displays show different flags
+        for (let i = 0; i < currentFlagIndices.length; i++) {
+            currentFlagIndices[i] = (currentFlagIndices[i] + 3) % flagList.length;
+        }
+        updateFlagDisplays();
         
         // Short delay before removing the transition class
         setTimeout(() => {
-            flagDisplay.classList.remove('flag-transition');
+            flagDisplays.forEach(display => {
+                display.classList.remove('flag-transition');
+            });
             isTransitioning = false;
         }, 200);
     }, 300);
@@ -83,7 +92,7 @@ function changeFlag() {
  * Manually trigger a flag change (can be used for testing)
  */
 function triggerFlagChange() {
-    changeFlag();
+    changeFlags();
 }
 
 /**

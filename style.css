@@ -67,6 +67,7 @@ body {
     justify-content: space-between;
     width: 100%;
     height: 100%;
+    flex: 1; /* Allow to grow */
 }
 
 h1, h2 {
@@ -912,8 +913,6 @@ h1, h2 {
     position: relative;
     z-index: 0; /* Base layer */
 }
-
-
 
 /* Matter.js canvas styling */
 #game-field canvas {
@@ -2102,14 +2101,14 @@ h1, h2 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 70px;
+    width: 90px;
 }
 
 /* Player images */
 .user-image {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    border-radius: 0;
     background-color: #333;
     border: 2px solid #fff;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
@@ -2140,7 +2139,7 @@ h1, h2 {
 
 /* Middle screen */
 .middle-screen {
-    width: 150px;
+    width: 200px;
     height: 40px;
     background-color: rgba(0, 30, 60, 0.8);
     overflow: hidden;
@@ -2159,14 +2158,15 @@ h1, h2 {
         );
     background-size: 3px 3px;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
+    padding: 0 10px;
 }
 
 /* Flag display in middle screen */
 .flag-display {
-    width: 60px;
-    height: 35px;
+    width: 40px;
+    height: 30px;
     background-size: cover;
     background-position: center;
     border-radius: 3px;
@@ -2437,8 +2437,7 @@ h1, h2 {
     background-color: transparent;
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
     filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6)) !important;
-    margin: 0 20px; /* Space between logos */
-    margin-bottom: 30px; /* Restore the margin-bottom */
+    margin: 0 20px;
     transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover effect */
 }
 
@@ -2515,4 +2514,28 @@ h1, h2 {
 
 img[src*="puma.png"] {
     display: inline-block;
+}
+
+/* Adjust for taller screens */
+@media (min-height: 750px) {
+    /* Make the game container taller to fill space, but maintain original proportions */
+    .game-container {
+        height: 650px; /* Carefully increased from original 570px */
+    }
+    
+    /* Ensure all elements remain visible */
+    .bottom-screen-container,
+    .bottom-screen,
+    .sponsor-logo,
+    .crowd-top,
+    .crowd-bottom {
+        display: flex !important;
+    }
+}
+
+/* Adjust for even taller screens */
+@media (min-height: 850px) {
+    .game-container {
+        height: 700px; /* Further increased for very tall screens */
+    }
 }
