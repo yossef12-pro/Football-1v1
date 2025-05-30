@@ -120,7 +120,7 @@ function stopSound(audioElement) {
 }
 
 // Game constants
-const PLAYER_RADIUS = 25; // Large hitbox for easier gameplay
+const PLAYER_RADIUS = 35; // Increased player radius to match larger visuals
 const BALL_RADIUS = 15;
 const FIELD_WIDTH = 320;
 const FIELD_HEIGHT = 420;
@@ -237,16 +237,19 @@ function addKeyboardControls() {
 
 // Initialize physics engine and game elements
 function initPhysics() {
-    // Create engine with improved settings for high-speed collisions
+    // Check if performance mode is enabled
+    const performanceMode = localStorage.getItem('performanceMode') === 'true';
+    
+    // Create engine with settings based on performance mode
     window.game.engine = Engine.create({
         enableSleeping: false,
-        constraintIterations: 2,
-        positionIterations: 6,
-        velocityIterations: 4
+        constraintIterations: performanceMode ? 1 : 2,
+        positionIterations: performanceMode ? 4 : 6,
+        velocityIterations: performanceMode ? 3 : 4
     });
 
     // Set engine properties
-    window.game.engine.timing.timeScale = 0.9;
+    window.game.engine.timing.timeScale = performanceMode ? 1.2 : 0.9;
 
     window.game.world = window.game.engine.world;
 
@@ -262,7 +265,10 @@ function initPhysics() {
             showSleeping: false,
             showDebug: false,
             showBounds: false,  // Hide body boundaries
-            showCollisions: false  // Hide collisions
+            showCollisions: false,  // Hide collisions
+            // Make physics lines invisible in performance mode, but keep screens visible
+            wireframeBackground: performanceMode ? 'transparent' : false,
+            opacity: performanceMode ? 0 : 1
         }
     });
 
@@ -318,6 +324,12 @@ function initPhysics() {
 
     // Remove top navigation buttons
     hideTopNavButtons();
+
+    // Start AI for opponent
+    startAI();
+
+    // Start game timer
+    startGameTimer();
 }
 
 // Remove top navigation buttons from UI
@@ -647,12 +659,9 @@ function createPlayers() {
     const playerFlag = window.selectedPlayerFlag || 'argentina';
     const opponentFlag = window.selectedOpponentFlag || 'brazil-';
 
-    // Visual size (smaller than hitbox)
-    const visualRadius = 25;
-
-    // Player 1 (bottom)
+    // Player 1 (bottom) - positioned slightly to the left
     window.game.player1 = Bodies.circle(
-        FIELD_WIDTH / 2,
+        FIELD_WIDTH / 2 - 50, // Offset to the left
         PLAYER_START_Y,
         PLAYER_RADIUS,
         {
@@ -672,9 +681,9 @@ function createPlayers() {
         }
     );
 
-    // Player 2 (top) - opponent
+    // Player 2 (top) - opponent, positioned slightly to the right
     window.game.player2 = Bodies.circle(
-        FIELD_WIDTH / 2,
+        FIELD_WIDTH / 2 + 50, // Offset to the right
         OPPONENT_START_Y,
         PLAYER_RADIUS,
         {
@@ -700,40 +709,69 @@ function createPlayers() {
     // Clear any existing player elements
     document.querySelectorAll('.player').forEach(el => el.remove());
 
+    // Format flag names to get proper player image filenames
+    let player1ImageName = formatPlayerImageName(playerFlag);
+    let player2ImageName = formatPlayerImageName(opponentFlag);
+
     // Create visual player elements
     const player1Element = document.createElement('div');
     player1Element.className = 'player player1';
-    player1Element.style.backgroundImage = `url('flags/${playerFlag}.png')`;
+    player1Element.style.backgroundImage = `url('player-team/${player1ImageName}-player.png')`;
     document.getElementById('game-field').appendChild(player1Element);
 
     const player2Element = document.createElement('div');
     player2Element.className = 'player player2';
-    player2Element.style.backgroundImage = `url('flags/${opponentFlag}.png')`;
+    player2Element.style.backgroundImage = `url('player-team/${player2ImageName}-player.png')`;
     document.getElementById('game-field').appendChild(player2Element);
 
     // Initialize player visuals
     updatePlayerVisuals();
 }
 
+// Format flag name to get the correct player image filename
+function formatPlayerImageName(flagName) {
+    // Remove trailing dash if present (e.g., "brazil-" -> "brazil")
+    let name = flagName.replace(/-$/, '');
+    
+    // Handle special cases based on the actual filenames in the player-team folder
+    if (name === 'united-kingdom') return 'united-kingdom';
+    if (name === 'SaudiArabia') return 'saudiArabia';
+    if (name === 'japan') return 'japan'; // Added Japan
+    if (name === 'argentina') return 'argantina'; // Note the typo in the filename
+    if (name === 'portugal') return 'portgul'; // Note the typo in the filename
+    
+    // List of available player images (based on the folder contents)
+    const availableImages = [
+        'argantina', 'belgium', 'brazil', 'china', 'egypt', 'england',
+        'france', 'germany', 'italy', 'japan', 'poland', 'portgul', 'qatar',
+        'saudiArabia', 'spain', 'united-kingdom'
+    ];
+    
+    // Check if the player image exists, if not use a default
+    if (!availableImages.includes(name)) {
+        console.log(`Player image for "${name}" not found, using default`);
+        return 'spain'; // Use Spain as default player image
+    }
+    
+    return name;
+}
+
 // Update player visual elements
 function updatePlayerVisuals() {
     if (!window.game.player1 || !window.game.player2) return;
 
-    // Visual size for the players
-    const visualRadius = 25;
-
-    // Update player 1 position
+    // Update player 1 position (mirrored)
     const player1Element = document.querySelector('.player1');
     if (player1Element) {
-        player1Element.style.left = `${window.game.player1.position.x - visualRadius}px`;
-        player1Element.style.top = `${window.game.player1.position.y - visualRadius}px`;
+        player1Element.style.left = `${window.game.player1.position.x}px`;
+        player1Element.style.top = `${window.game.player1.position.y}px`;
     }
 
-    // Update player 2 position
+    // Update player 2 position (not mirrored)
     const player2Element = document.querySelector('.player2');
     if (player2Element) {
-        player2Element.style.left = `${window.game.player2.position.x - visualRadius}px`;
-        player2Element.style.top = `${window.game.player2.position.y - visualRadius}px`;
+        player2Element.style.left = `${window.game.player2.position.x}px`;
+        player2Element.style.top = `${window.game.player2.position.y}px`;
     }
 }
 
@@ -794,13 +832,35 @@ function addMouseControl() {
     window.game.render.mouse = mouse;
 }
 
-// Handle collisions
+// Create visual impact effect at collision point
+function createImpactEffect(x, y, isPoweredUp) {
+    // Check if performance mode is enabled
+    const performanceMode = localStorage.getItem('performanceMode') === 'true';
+    
+    // Skip creating visual effects in performance mode
+    if (performanceMode) return;
+    
+    const impactEffect = document.createElement('div');
+    impactEffect.className = isPoweredUp ? 'impact-effect powered-up' : 'impact-effect';
+    impactEffect.style.left = x + 'px';
+    impactEffect.style.top = y + 'px';
+    document.getElementById('game-field').appendChild(impactEffect);
+    
+    // Remove the effect after animation completes
+    setTimeout(() => {
+        if (impactEffect.parentNode) {
+            impactEffect.parentNode.removeChild(impactEffect);
+        }
+    }, 300);
+}
+
+// Handle collisions between game objects
 function handleCollisions(event) {
     const pairs = event.pairs;
-
+    
     for (let i = 0; i < pairs.length; i++) {
         const pair = pairs[i];
-
+        
         // Check for ball entering goals
         if ((pair.bodyA.label === 'ball' && pair.bodyB.label === 'topGoal') ||
             (pair.bodyB.label === 'ball' && pair.bodyA.label === 'topGoal')) {
@@ -879,28 +939,6 @@ function handleCollisions(event) {
                         window.game.ball.restitution = BALL_RESTITUTION;
                     }
                 }, 2000);
-
-                // Create a red impact effect
-                const impactEffect = document.createElement('div');
-                impactEffect.className = 'impact-effect powered-up';
-                impactEffect.style.position = 'absolute';
-                impactEffect.style.width = '40px';
-                impactEffect.style.height = '40px';
-                impactEffect.style.borderRadius = '50%';
-                impactEffect.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
-                impactEffect.style.left = ballBody.position.x + 'px';
-                impactEffect.style.top = ballBody.position.y + 'px';
-                impactEffect.style.transform = 'translate(-50%, -50%)';
-                impactEffect.style.zIndex = '95';
-                impactEffect.style.animation = 'impact 0.3s ease-out forwards';
-                document.getElementById('game-field').appendChild(impactEffect);
-
-                // Remove after animation completes
-                setTimeout(() => {
-                    if (impactEffect.parentNode) {
-                        impactEffect.parentNode.removeChild(impactEffect);
-                    }
-                }, 300);
             }
 
             // Change ball direction based on kick, but maintain constant speed
@@ -935,6 +973,10 @@ function handleCollisions(event) {
                     ballOverlay.classList.remove('ball-bounce');
                 }, 200);
             }
+
+            // Use the new createImpactEffect function
+            const collisionPoint = pair.collision.supports[0] || { x: ballBody.position.x, y: ballBody.position.y };
+            createImpactEffect(collisionPoint.x, collisionPoint.y, window.game.ball2D && window.game.ball2D.isPoweredUp);
         }
     }
 }
@@ -958,6 +1000,36 @@ function playKickSound(strength) {
 
 // Add goal celebration effect
 function addGoalEffect(isPlayerGoal) {
+    // Check if performance mode is enabled
+    const performanceMode = localStorage.getItem('performanceMode') === 'true';
+    
+    // In performance mode, only show minimal effects
+    if (performanceMode) {
+        // Create simple goal text
+        const goalText = document.createElement('div');
+        goalText.textContent = 'GOAL!';
+        goalText.style.position = 'absolute';
+        goalText.style.top = '50%';
+        goalText.style.left = '50%';
+        goalText.style.transform = 'translate(-50%, -50%)';
+        goalText.style.color = '#fff';
+        goalText.style.fontSize = '32px';
+        goalText.style.fontWeight = 'bold';
+        goalText.style.textShadow = '0 0 10px rgba(0, 0, 0, 0.7)';
+        goalText.style.zIndex = '101';
+        goalText.style.animation = 'goalText 1.5s forwards';
+        document.getElementById('game-field').appendChild(goalText);
+        
+        // Remove after animation
+        setTimeout(() => {
+            if (goalText.parentNode) {
+                goalText.parentNode.removeChild(goalText);
+            }
+        }, 1500);
+        
+        return;
+    }
+
     // Note: We've moved the sound playing to the collision detection
     // to eliminate any delay between the goal being scored and the sound playing
 
@@ -1011,62 +1083,50 @@ function addGoalEffect(isPlayerGoal) {
     triggerCrowdWave();
 }
 
-// Reset ball position
+// Reset ball position and velocity after a goal
 function resetBall() {
-    // Reset ball position to center
-    Body.setPosition(window.game.ball, {
-        x: FIELD_WIDTH / 2,
-        y: FIELD_HEIGHT / 2
+    // Reset ball to center
+    Body.setPosition(window.game.ball, { 
+        x: FIELD_WIDTH / 2, 
+        y: FIELD_HEIGHT / 2 
     });
-
-    // Give the ball an initial velocity in a random direction
-    const randomAngle = Math.random() * Math.PI * 2;
-    const initialSpeed = window.game.ball2D ? window.game.ball2D.baseSpeed : 5;
-
-    Body.setVelocity(window.game.ball, {
-        x: Math.cos(randomAngle) * initialSpeed,
-        y: Math.sin(randomAngle) * initialSpeed
-    });
-
-    // Reset ball angular velocity
+    
+    // Stop the ball
+    Body.setVelocity(window.game.ball, { x: 0, y: 0 });
     Body.setAngularVelocity(window.game.ball, 0);
-
+    
     // Reset player positions
-    Body.setPosition(window.game.player1, {
-        x: FIELD_WIDTH / 2,
-        y: PLAYER_START_Y
+    Body.setPosition(window.game.player1, { 
+        x: FIELD_WIDTH / 2 - 50, // Offset to the left
+        y: PLAYER_START_Y 
     });
-
-    Body.setPosition(window.game.player2, {
-        x: FIELD_WIDTH / 2,
-        y: OPPONENT_START_Y
+    
+    Body.setPosition(window.game.player2, { 
+        x: FIELD_WIDTH / 2 + 50, // Offset to the right
+        y: OPPONENT_START_Y 
     });
-
-    // Reset player velocities
-    Body.setVelocity(window.game.player1, {x: 0, y: 0});
-    Body.setVelocity(window.game.player2, {x: 0, y: 0});
-
-    // Force update of 2D textured ball position and reset power-up state
-    if (window.game.ball2D) {
-        window.game.ball2D.updatePosition(FIELD_WIDTH / 2, FIELD_HEIGHT / 2, {x: 0, y: 0});
+    
+    // Stop the players
+    Body.setVelocity(window.game.player1, { x: 0, y: 0 });
+    Body.setVelocity(window.game.player2, { x: 0, y: 0 });
+    
+    // Reset ball power-up state if applicable
+    if (window.game.ball2D && window.game.ball2D.isPoweredUp) {
         window.game.ball2D.resetPowerUp();
     }
 
-    // Reset stuck timer
-    if (window.game.stuckTimer) {
-        window.game.stuckTimer.isStuck = false;
-        window.game.stuckTimer.startTime = Date.now();
-        window.game.stuckTimer.position = { x: FIELD_WIDTH / 2, y: FIELD_HEIGHT / 2 };
-    }
-
-    // Reset AI state
-    if (window.game.aiState) {
-        window.game.aiState.lastBehaviorChange = Date.now();
-        window.game.aiState.isBackingOff = false;
-        window.game.aiState.backoffStartTime = 0;
-        window.game.aiState.ballOnAISide = false;
-        window.game.aiState.ballOnAISideStartTime = 0;
-    }
+    // After a short delay, give the ball a gentle kick in a random direction
+    setTimeout(() => {
+        if (!window.game || !window.game.ball) return; // Safety check
+        
+        const randomAngle = Math.random() * Math.PI * 2;
+        const kickStrength = 2; // Gentle initial kick
+        
+        Body.setVelocity(window.game.ball, {
+            x: Math.cos(randomAngle) * kickStrength,
+            y: Math.sin(randomAngle) * kickStrength
+        });
+    }, 1000);
 }
 
 // Update score UI
@@ -1075,15 +1135,24 @@ function updateScoreUI() {
     document.getElementById('player2-score').textContent = window.game.score[1];
 }
 
-// Start AI for player 2 (opponent)
+// Start AI for opponent
 function startAI() {
-    // Clear any existing AI interval
+    // Clear any existing interval
     if (window.game.aiUpdateInterval) {
         clearInterval(window.game.aiUpdateInterval);
     }
-
-    // Update AI every 16ms (roughly 60fps)
-    window.game.aiUpdateInterval = setInterval(updateAI, 16);
+    
+    // Check if performance mode is enabled
+    const performanceMode = localStorage.getItem('performanceMode') === 'true';
+    
+    // Set update frequency based on performance mode
+    const updateFrequency = performanceMode ? 100 : 33; // 10fps vs 30fps
+    
+    // Make updateAI function globally available so performance mode can adjust it
+    window.updateAI = updateAI;
+    
+    // Start AI update interval
+    window.game.aiUpdateInterval = setInterval(updateAI, updateFrequency);
 }
 
 // Update AI movement
@@ -1946,6 +2015,9 @@ function checkAndFixCornerStuck() {
 function updateBallVisuals() {
     if (!window.game.ball) return;
 
+    // Check if performance mode is enabled
+    const performanceMode = localStorage.getItem('performanceMode') === 'true';
+
     // Visual size for the ball (smaller than hitbox)
     const visualRadius = 10;
 
@@ -1954,7 +2026,14 @@ function updateBallVisuals() {
 
     // Update 2D textured ball if available
     if (window.game.ball2D) {
-        window.game.ball2D.updatePosition(ballPos.x, ballPos.y, window.game.ball.velocity);
+        // In performance mode, use the optimized updateBall method
+        if (performanceMode) {
+            window.game.ball2D.updatePosition(ballPos.x, ballPos.y, window.game.ball.velocity);
+            window.game.ball2D.updateBall(window.game.ball.velocity);
+        } else {
+            // Regular mode - use default update with full effects
+            window.game.ball2D.updatePosition(ballPos.x, ballPos.y, window.game.ball.velocity);
+        }
 
         // Hide default ball overlay when using textured 2D ball
         const ballOverlay = document.querySelector('.ball-overlay');
@@ -2240,6 +2319,12 @@ window.stopPhaserGame = function() {
 
 // Trigger camera flashes in the crowd
 function triggerCrowdWave() {
+    // Check if performance mode is enabled
+    const performanceMode = localStorage.getItem('performanceMode') === 'true';
+    
+    // Skip effects in performance mode
+    if (performanceMode) return;
+    
     // Trigger random camera flashes in the crowd
     const topFlashes = document.querySelectorAll('.crowd-top [class^="flash"]');
     const bottomFlashes = document.querySelectorAll('.crowd-bottom [class^="flash"]');

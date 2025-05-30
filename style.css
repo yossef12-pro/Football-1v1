@@ -1610,34 +1610,40 @@ h1, h2 {
 
 /* Player styles */
 .player {
-    width: 50px;
-    height: 50px;
+    width: 110px; /* Bigger player */
+    height: 140px; /* Bigger player */
     position: absolute;
-    background-size: cover;
-    border-radius: 50%;
-    z-index: 40; /* High z-index to be above everything else */
-    pointer-events: none; /* Players should not receive mouse events directly */
-    box-shadow:
-        0 4px 8px rgba(0,0,0,0.4),
-        0 0 0 2px rgba(255,255,255,0.3);
+    background-size: contain;
+    background-position: center bottom; /* Position from bottom to align feet */
+    background-repeat: no-repeat;
+    border-radius: 0; /* Remove circular shape */
+    z-index: 40;
+    pointer-events: none;
+    box-shadow: none; /* Remove box/border around player */
     transition: transform 0.1s;
-    cursor: default; /* Use normal cursor */
+    cursor: default;
+    transform: translate(-50%, -50%);
 }
 
+/* Mirror player 1 (the one user controls) */
+.player1 {
+    transform: translate(-50%, -50%) scaleX(-1); /* Mirror horizontally */
+}
+
+/* Shadow under player */
 .player::after {
     content: '';
     position: absolute;
-    width: 50px;
-    height: 15px;
-    background: rgba(0,0,0,0.25);
+    width: 80px;
+    height: 25px;
+    background: rgba(0,0,0,0.4); /* Darker shadow */
     border-radius: 50%;
-    bottom: -8px;
-    left: 0;
-    filter: blur(3px);
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%) scale(1, 0.3);
+    filter: blur(6px);
     z-index: -1;
-    transform: scale(0.8, 0.4);
-    opacity: 0.7;
-    transition: transform 0.1s, opacity 0.1s;
+    opacity: 0.8;
 }
 
 .player-boosting {
@@ -2538,4 +2544,226 @@ img[src*="puma.png"] {
     .game-container {
         height: 700px; /* Further increased for very tall screens */
     }
+}
+
+/* Performance mode toggle */
+.performance-toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 5px 10px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 20px;
+    backdrop-filter: blur(5px);
+}
+
+.performance-label {
+    color: white;
+    font-size: 12px;
+    margin-right: 8px;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 20px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: #2196F3;
+}
+
+input:focus + .toggle-slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+/* Performance mode class that will be applied to the game container */
+.performance-mode .stand-screen,
+.performance-mode .screen-content,
+.performance-mode .stand-overlay,
+.performance-mode .stand-crowd,
+.performance-mode .stand-lights,
+.performance-mode .flash1,
+.performance-mode .flash2,
+.performance-mode .flash3,
+.performance-mode .flash4,
+.performance-mode .flash5,
+.performance-mode .crowd-top::after,
+.performance-mode .crowd-bottom::after,
+.performance-mode .bottom-screen,
+.performance-mode .ball-trail,
+.performance-mode .impact-effect {
+    display: none !important;
+}
+
+.performance-mode .ball-shadow {
+    opacity: 0.2;
+    filter: none;
+}
+
+.performance-mode .stand {
+    background: #222;
+    box-shadow: none;
+    border: 1px solid #444;
+}
+
+/* In-game performance toggle at menu screen */
+.performance-option {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+}
+
+.performance-option .performance-label {
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+.performance-text {
+    color: #ffffff;
+    font-size: 14px;
+    margin-left: 10px;
+    opacity: 0.8;
+}
+
+/* Performance mode class that will be applied to the game container */
+.performance-mode .stand-overlay,
+.performance-mode .stand-crowd,
+.performance-mode .stand-lights,
+.performance-mode .flash1,
+.performance-mode .flash2,
+.performance-mode .flash3,
+.performance-mode .flash4,
+.performance-mode .flash5,
+.performance-mode .crowd-top::after,
+.performance-mode .crowd-bottom::after,
+.performance-mode .ball-trail,
+.performance-mode .impact-effect {
+    display: none !important;
+}
+
+/* Keep the screen content visible in performance mode but simplify animations */
+.performance-mode .stand-screen {
+    box-shadow: none;
+    animation: none;
+    background-image: none;
+}
+
+.performance-mode .stand-screen::after {
+    display: none;
+}
+
+/* Ensure screen content is always visible in performance mode */
+.performance-mode .screen-content,
+.performance-mode .screen-content-left,
+.performance-mode .screen-content-right,
+.performance-mode .screen-content-bottom,
+.performance-mode .content-item,
+.performance-mode .sponsor-logo {
+    display: flex !important;
+    opacity: 1 !important;
+}
+
+/* Slow down animations in performance mode */
+.performance-mode .screen-content {
+    animation-duration: 60s !important; /* Slow down animations */
+}
+
+.performance-mode .bottom-screen {
+    box-shadow: none;
+    animation: none;
+    background-image: none;
+    display: flex !important;
+}
+
+.performance-mode .bottom-screen::before {
+    display: none;
+}
+
+.performance-mode .ball-shadow {
+    opacity: 0.2;
+    filter: none;
+}
+
+.performance-mode .stand {
+    background: #222;
+    box-shadow: none;
+    border: 1px solid #444;
+}
+
+/* Simplify sponsor logo effects in performance mode */
+.performance-mode .sponsor-logo {
+    box-shadow: none;
+    filter: none !important;
+    transition: none;
+    display: inline-block !important;
+}
+
+.performance-mode .sponsor-logo:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Keep side screen animations at normal speed in performance mode */
+.performance-mode .screen-content-left {
+    animation: scroll-down 30s linear infinite !important; /* Same as non-performance mode */
+}
+
+.performance-mode .screen-content-right {
+    animation: scroll-up 30s linear infinite !important; /* Same as non-performance mode */
+}
+
+/* Keep bottom screen animations at normal speed in performance mode */
+.performance-mode .screen-content-bottom {
+    animation: scroll-left-bottom 12s linear infinite !important; /* Same as non-performance mode */
+}
+
+/* Sponsor banner should also maintain normal speed */
+.performance-mode .sponsor-banner-content {
+    animation: sponsor-scroll 20s linear infinite !important; /* Same as non-performance mode */
 }

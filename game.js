@@ -17,6 +17,9 @@ let gameTimer;
 document.addEventListener('DOMContentLoaded', function() {
     loadFlags();
 
+    // Initialize performance mode based on saved preference
+    initPerformanceMode();
+
     // Add tournament button to main menu
     const menuContainer = document.querySelector('.menu-buttons');
     if (menuContainer) {
@@ -869,5 +872,162 @@ function updatePlayerInfo(player1Flag, player2Flag) {
     // You could add custom player images here later
     // if (player1ImageEl) player1ImageEl.style.backgroundImage = `url('players/${player1Flag}.jpg')`;
     // if (player2ImageEl) player2ImageEl.style.backgroundImage = `url('players/${player2Flag}.jpg')`;
+}
+
+// Initialize performance mode based on localStorage preference
+function initPerformanceMode() {
+    // Check if performance mode preference exists in localStorage
+    const performanceMode = localStorage.getItem('performanceMode') === 'true';
+    
+    // Set the initial state of both toggle switches
+    const menuToggle = document.getElementById('performance-toggle-menu');
+    const gameToggle = document.getElementById('performance-toggle-game');
+    
+    if (menuToggle) menuToggle.checked = performanceMode;
+    if (gameToggle) gameToggle.checked = performanceMode;
+    
+    // Apply performance mode class if enabled
+    if (performanceMode) {
+        document.querySelector('.game-container').classList.add('performance-mode');
+        
+        // Ensure screen content is visible and animations run at normal speed
+        ensureScreenContentVisible();
+        resetScreenAnimationSpeeds();
+    }
+    
+    // Add event listeners to both toggle switches
+    if (menuToggle) {
+        menuToggle.addEventListener('change', function() {
+            togglePerformanceMode(this.checked);
+        });
+    }
+    
+    if (gameToggle) {
+        gameToggle.addEventListener('change', function() {
+            togglePerformanceMode(this.checked);
+        });
+    }
+}
+
+// Reset screen animation speeds to normal in performance mode
+function resetScreenAnimationSpeeds() {
+    // Reset left screen animation
+    const leftScreen = document.querySelector('.screen-content-left');
+    if (leftScreen) {
+        leftScreen.style.animation = 'none';
+        void leftScreen.offsetWidth; // Force reflow
+        leftScreen.style.animation = 'scroll-down 30s linear infinite';
+    }
+    
+    // Reset right screen animation
+    const rightScreen = document.querySelector('.screen-content-right');
+    if (rightScreen) {
+        rightScreen.style.animation = 'none';
+        void rightScreen.offsetWidth; // Force reflow
+        rightScreen.style.animation = 'scroll-up 30s linear infinite';
+    }
+    
+    // Reset bottom screen animation
+    const bottomScreen = document.querySelector('.screen-content-bottom');
+    if (bottomScreen) {
+        bottomScreen.style.animation = 'none';
+        void bottomScreen.offsetWidth; // Force reflow
+        bottomScreen.style.animation = 'scroll-left-bottom 12s linear infinite';
+    }
+    
+    // Reset sponsor banner animation
+    const sponsorBanner = document.querySelector('.sponsor-banner-content');
+    if (sponsorBanner) {
+        sponsorBanner.style.animation = 'none';
+        void sponsorBanner.offsetWidth; // Force reflow
+        sponsorBanner.style.animation = 'sponsor-scroll 20s linear infinite';
+    }
+}
+
+// Toggle performance mode and sync both switches
+function togglePerformanceMode(enabled) {
+    // Update localStorage
+    localStorage.setItem('performanceMode', enabled);
+    
+    // Sync both toggle switches
+    const menuToggle = document.getElementById('performance-toggle-menu');
+    const gameToggle = document.getElementById('performance-toggle-game');
+    
+    if (menuToggle) menuToggle.checked = enabled;
+    if (gameToggle) gameToggle.checked = enabled;
+    
+    // Apply or remove performance mode class
+    const gameContainer = document.querySelector('.game-container');
+    if (enabled) {
+        gameContainer.classList.add('performance-mode');
+        
+        // Ensure screen content is visible and animations run at normal speed
+        ensureScreenContentVisible();
+        resetScreenAnimationSpeeds();
+    } else {
+        gameContainer.classList.remove('performance-mode');
+    }
+    
+    // Update game physics settings if game is active
+    if (window.game) {
+        updateGamePerformance(enabled);
+    }
+}
+
+// Function to ensure screen content remains visible in performance mode
+function ensureScreenContentVisible() {
+    // Make sure screen content is visible
+    const screenContents = document.querySelectorAll('.screen-content, .screen-content-left, .screen-content-right, .screen-content-bottom');
+    screenContents.forEach(content => {
+        if (content) content.style.display = 'flex';
+    });
+    
+    // Make sure sponsor logos are visible
+    const sponsorLogos = document.querySelectorAll('.sponsor-logo');
+    sponsorLogos.forEach(logo => {
+        if (logo) {
+            logo.style.display = 'inline-block';
+            logo.style.opacity = '1';
+        }
+    });
+    
+    // Make sure bottom screen is visible
+    const bottomScreen = document.querySelector('.bottom-screen');
+    if (bottomScreen) bottomScreen.style.display = 'flex';
+}
+
+// Update game physics and performance settings
+function updateGamePerformance(performanceMode) {
+    if (!window.game) return;
+    
+    if (performanceMode) {
+        // Reduce physics iterations for better performance
+        window.game.engine.timing.timeScale = 1.2;
+        
+        // Reduce collision iterations
+        window.game.engine.constraintIterations = 1;
+        window.game.engine.positionIterations = 4;
+        window.game.engine.velocityIterations = 3;
+        
+        // Slow down AI update frequency
+        if (window.game.aiUpdateInterval) {
+            clearInterval(window.game.aiUpdateInterval);
+            window.game.aiUpdateInterval = setInterval(window.updateAI, 100); // 10 updates per second
+        }
+    } else {
+        // Restore default physics settings
+        window.game.engine.timing.timeScale = 0.9;
+        
+        // Restore default collision iterations
+        window.game.engine.constraintIterations = 2;
+        window.game.engine.positionIterations = 6;
+        window.game.engine.velocityIterations = 4;
+        
+        // Restore default AI update frequency
+        if (window.game.aiUpdateInterval) {
+            clearInterval(window.game.aiUpdateInterval);
+            window.game.aiUpdateInterval = setInterval(window.updateAI, 33); // ~30 updates per second
+        }
+    }
 }
 

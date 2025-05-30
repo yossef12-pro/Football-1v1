@@ -325,4 +325,39 @@ class Ball2D {
         const flashes = document.querySelectorAll('.power-up-flash');
         flashes.forEach(flash => flash.remove());
     }
+
+    // Update ball visuals based on physics state
+    updateBall(velocity) {
+        // Check if performance mode is enabled
+        const performanceMode = localStorage.getItem('performanceMode') === 'true';
+
+        // Don't create trail elements in performance mode
+        if (!performanceMode) {
+            // Only create a trail element if the ball is moving fast enough
+            const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+            if (speed > 5) {
+                this.createTrailElement();
+            }
+        }
+
+        // Calculate rotation based on velocity
+        if (velocity.x !== 0 || velocity.y !== 0) {
+            const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+            const rotationSpeed = speed / 30; // Adjust this divisor to control rotation speed
+            this.rotation += rotationSpeed;
+            this.ballElement.style.transform = `rotate(${this.rotation}rad)`;
+        }
+
+        // Update ball brightness based on speed
+        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+        
+        // Always keep the ball visible, but skip expensive visual effects in performance mode
+        if (!performanceMode) {
+            const brightness = 1 + speed / 50; // Increase brightness with speed
+            this.ballElement.style.filter = `brightness(${brightness})`;
+        } else {
+            // In performance mode, use minimal effects
+            this.ballElement.style.filter = 'none';
+        }
+    }
 }

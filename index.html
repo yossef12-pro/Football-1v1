@@ -27,12 +27,28 @@
                 <div class="team-selection-container">
                     <div class="flags-grid" id="flags-grid-1"></div>
                 </div>
+                <div class="performance-option">
+                    <span class="performance-label">Performance Mode</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="performance-toggle-menu">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="performance-text">Better for mobile</span>
+                </div>
                 <div id="start-game-button-container"></div>
             </div>
         </div>
 
             <!-- Game Screen -->
         <div id="game-screen" class="screen" style="display: none;">
+            <div class="performance-toggle-container">
+                <span class="performance-label">Performance</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="performance-toggle-game">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
             <!-- Top crowd above scoreboard -->
             <div class="crowd-top">
                 <div class="flash1"></div>
