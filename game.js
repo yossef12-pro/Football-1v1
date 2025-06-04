@@ -442,13 +442,13 @@ function showEndScreen(winnerFlag, winnerText, finalScore) {
     // Get the play-again button
     const playAgainButton = document.getElementById('play-again');
     if (playAgainButton) {
-        // Check if we're in tournament mode
-        const urlParams = new URLSearchParams(window.location.search);
-        const mode = urlParams.get('mode');
+    // Check if we're in tournament mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
 
-        if (mode === 'tournament') {
-            const tournamentStage = localStorage.getItem('tournamentStage');
-            
+    if (mode === 'tournament') {
+        const tournamentStage = localStorage.getItem('tournamentStage');
+
             // Check if player won or lost
             const player1Score = parseInt(document.getElementById('player1-score').textContent);
             const player2Score = parseInt(document.getElementById('player2-score').textContent);

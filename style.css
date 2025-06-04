@@ -1034,29 +1034,16 @@ h1, h2 {
     height: 100%;
 }
 
-/* Ball styles */
-.ball-overlay {
-    width: 30px;
-    height: 30px;
-    position: absolute;
-    background: url('ball/ball.png');
-    background-size: cover;
-    border-radius: 50%;
-    z-index: 30; /* Above field elements but below players */
-    pointer-events: none; /* Ball should not receive mouse events */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    transition: filter 0.1s;
-    --bounce-scale: 1.1; /* Default bounce scale */
-}
+
 
 /* Textured 2D ball */
 .textured-ball {
-    width: 30px;
-    height: 30px;
+    width: 10px;
+    height: 10px;
     position: absolute;
     background-image: url('ball/texture.avif');
     background-size: cover;
-    border-radius: 50%;
+    border-radius: 20%;
     z-index: 100;
     pointer-events: none;
     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
@@ -1186,6 +1173,24 @@ h1, h2 {
     20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
     80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
     100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+}
+
+@keyframes countdownPulse {
+    0% {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+    50% {
+        transform: translateX(-50%) scale(1.05);
+        opacity: 0.95;
+        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 30px rgba(255, 255, 255, 0.4);
+    }
+    100% {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
 }
 
 #end-screen {
@@ -2546,28 +2551,6 @@ img[src*="puma.png"] {
     }
 }
 
-/* Performance mode toggle */
-.performance-toggle-container {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding: 5px 10px;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 100;
-    background: rgba(0, 0, 0, 0.6);
-    border-radius: 20px;
-    backdrop-filter: blur(5px);
-}
-
-.performance-label {
-    color: white;
-    font-size: 12px;
-    margin-right: 8px;
-    font-weight: bold;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-}
 
 .toggle-switch {
     position: relative;

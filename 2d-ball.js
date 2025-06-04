@@ -1,28 +1,39 @@
 // 2D Ball implementation with texture rotation and special effects
 // 2d-ball.js
 
-// Singleton pattern to ensure only one 2D ball exists
-let ball2DInstance = null;
+// Store multiple ball instances
+let ball2DInstances = [];
 
 class Ball2D {
-    // Static method to get the single instance
-    static getInstance(gameField) {
-        console.log('Ball2D.getInstance called');
+    // Static method to create a new instance with a unique ID
+    static createInstance(gameField, ballId = 'ball1') {
+        console.log('Ball2D.createInstance called for:', ballId);
 
-        // If an instance exists, dispose it first
-        if (ball2DInstance) {
-            console.log('Disposing existing ball2DInstance');
-            ball2DInstance.dispose();
-            ball2DInstance = null;
-        }
-
-        // Create new instance
-        console.log('Creating new Ball2D instance');
-        ball2DInstance = new Ball2D(gameField);
-        return ball2DInstance;
+        // Create new instance with unique ID
+        console.log('Creating new Ball2D instance for:', ballId);
+        const newInstance = new Ball2D(gameField, ballId);
+        ball2DInstances.push(newInstance);
+        return newInstance;
     }
 
-    constructor(gameField) {
+    // Static method to get instance by ID
+    static getInstance(ballId = 'ball1') {
+        return ball2DInstances.find(instance => instance.ballId === ballId);
+    }
+
+    // Static method to dispose all instances
+    static disposeAll() {
+        console.log('Disposing all Ball2D instances');
+        ball2DInstances.forEach(instance => {
+            if (instance) {
+                instance.dispose();
+            }
+        });
+        ball2DInstances = [];
+    }
+
+    constructor(gameField, ballId = 'ball1') {
+        this.ballId = ballId;
         this.gameField = gameField;
         this.container = gameField;
         this.width = gameField.offsetWidth;
@@ -55,15 +66,16 @@ class Ball2D {
 
     // Create a container for the trail elements
     createTrailContainer() {
-        // Remove any existing trail container
-        const existingContainer = document.getElementById('ball-trail-container');
+        // Remove any existing trail container for this ball
+        const containerId = `ball-trail-container-${this.ballId}`;
+        const existingContainer = document.getElementById(containerId);
         if (existingContainer) {
             existingContainer.remove();
         }
 
         // Create new container
         this.trailContainer = document.createElement('div');
-        this.trailContainer.id = 'ball-trail-container';
+        this.trailContainer.id = containerId;
         this.trailContainer.style.position = 'absolute';
         this.trailContainer.style.top = '0';
         this.trailContainer.style.left = '0';
@@ -77,10 +89,10 @@ class Ball2D {
     createBall() {
         // Create ball element
         this.ballElement = document.createElement('div');
-        this.ballElement.className = 'textured-ball';
+        this.ballElement.className = `textured-ball textured-ball-${this.ballId}`;
         this.ballElement.style.position = 'absolute';
-        this.ballElement.style.width = '30px';
-        this.ballElement.style.height = '30px';
+        this.ballElement.style.width = '25px';
+        this.ballElement.style.height = '25px';
         this.ballElement.style.borderRadius = '50%';
         this.ballElement.style.backgroundImage = "url('ball/texture.avif')";
         this.ballElement.style.backgroundSize = 'cover';
@@ -95,7 +107,7 @@ class Ball2D {
         this.ballElement.style.backgroundColor = '#ffffff';
         this.ballElement.style.backgroundImage = "url('ball/texture.avif'), url('ball/text.jpg')";
 
-        console.log('2D ball element created');
+        console.log(`2D ball element created for ${this.ballId}`);
     }
 
     // Update ball position and rotation
@@ -240,7 +252,7 @@ class Ball2D {
 
         // Create power-up flash effect
         const flash = document.createElement('div');
-        flash.className = 'power-up-flash';
+        flash.className = `power-up-flash power-up-flash-${this.ballId}`;
         flash.style.position = 'absolute';
         flash.style.width = '60px';
         flash.style.height = '60px';
@@ -293,7 +305,7 @@ class Ball2D {
 
     // Clean up resources
     dispose() {
-        console.log('Disposing 2D ball');
+        console.log(`Disposing 2D ball ${this.ballId}`);
 
         // Cancel animation loop
         if (this.animationId) {
@@ -321,9 +333,15 @@ class Ball2D {
             this.trailContainer = null;
         }
 
-        // Remove any power-up flash elements
-        const flashes = document.querySelectorAll('.power-up-flash');
+        // Remove any power-up flash elements for this ball
+        const flashes = document.querySelectorAll(`.power-up-flash-${this.ballId}`);
         flashes.forEach(flash => flash.remove());
+
+        // Remove this instance from the global array
+        const index = ball2DInstances.indexOf(this);
+        if (index > -1) {
+            ball2DInstances.splice(index, 1);
+        }
     }
 
     // Update ball visuals based on physics state
@@ -350,7 +368,7 @@ class Ball2D {
 
         // Update ball brightness based on speed
         const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-        
+
         // Always keep the ball visible, but skip expensive visual effects in performance mode
         if (!performanceMode) {
             const brightness = 1 + speed / 50; // Increase brightness with speed
