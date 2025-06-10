@@ -2057,27 +2057,56 @@ function backoffBehavior() {
 // Enforce player boundaries
 function enforcePlayerBoundaries() {
     Events.on(window.game.engine, 'afterUpdate', function() {
-        // Keep player1 in bottom half
-        if (window.game.player1.position.y < FIELD_HEIGHT / 2) {
+        // Define boundary margins
+        const bottomBoundary = FIELD_HEIGHT - PLAYER_RADIUS - 5; // 5px margin from bottom
+        const topBoundary = PLAYER_RADIUS + 5; // 5px margin from top
+        const middleLine = FIELD_HEIGHT / 2;
+        
+        // Player 1 (bottom player) boundaries
+        // Top boundary (middle line)
+        if (window.game.player1.position.y < middleLine + PLAYER_RADIUS) {
             Body.setPosition(window.game.player1, {
                 x: window.game.player1.position.x,
-                y: FIELD_HEIGHT / 2 + PLAYER_RADIUS
+                y: middleLine + PLAYER_RADIUS
             });
             Body.setVelocity(window.game.player1, {
                 x: window.game.player1.velocity.x * 0.5,
                 y: Math.abs(window.game.player1.velocity.y) * 0.5 // Bounce back
             });
         }
+        // Bottom boundary
+        if (window.game.player1.position.y > bottomBoundary) {
+            Body.setPosition(window.game.player1, {
+                x: window.game.player1.position.x,
+                y: bottomBoundary
+            });
+            Body.setVelocity(window.game.player1, {
+                x: window.game.player1.velocity.x * 0.5,
+                y: -Math.abs(window.game.player1.velocity.y) * 0.5 // Bounce back
+            });
+        }
 
-        // Keep player2 in top half
-        if (window.game.player2.position.y > FIELD_HEIGHT / 2) {
+        // Player 2 (top player) boundaries
+        // Bottom boundary (middle line)
+        if (window.game.player2.position.y > middleLine - PLAYER_RADIUS) {
             Body.setPosition(window.game.player2, {
                 x: window.game.player2.position.x,
-                y: FIELD_HEIGHT / 2 - PLAYER_RADIUS
+                y: middleLine - PLAYER_RADIUS
             });
             Body.setVelocity(window.game.player2, {
                 x: window.game.player2.velocity.x * 0.5,
                 y: -Math.abs(window.game.player2.velocity.y) * 0.5 // Bounce back
+            });
+        }
+        // Top boundary
+        if (window.game.player2.position.y < topBoundary) {
+            Body.setPosition(window.game.player2, {
+                x: window.game.player2.position.x,
+                y: topBoundary
+            });
+            Body.setVelocity(window.game.player2, {
+                x: window.game.player2.velocity.x * 0.5,
+                y: Math.abs(window.game.player2.velocity.y) * 0.5 // Bounce back
             });
         }
 
