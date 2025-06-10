@@ -91,8 +91,8 @@ class Ball2D {
         this.ballElement = document.createElement('div');
         this.ballElement.className = `textured-ball textured-ball-${this.ballId}`;
         this.ballElement.style.position = 'absolute';
-        this.ballElement.style.width = '25px';
-        this.ballElement.style.height = '25px';
+        this.ballElement.style.width = '20px';
+        this.ballElement.style.height = '20px';
         this.ballElement.style.borderRadius = '50%';
         this.ballElement.style.backgroundImage = "url('ball/texture.avif')";
         this.ballElement.style.backgroundSize = 'cover';

@@ -120,7 +120,7 @@ function stopSound(audioElement) {
 }
 
 // Game constants
-const PLAYER_RADIUS = 25; // Increased player radius to match larger visuals
+const PLAYER_RADIUS = 30; // Increased player radius to match larger visuals
 const BALL_RADIUS = 5;
 const FIELD_WIDTH = 320;
 const FIELD_HEIGHT = 420;
@@ -137,6 +137,8 @@ const PLAYER_RESTITUTION = 0.3;
 const BALL_RESTITUTION = 2.8; // Higher bounce
 const AI_SPEED = 0.04; // Speed multiplier for AI movement
 const BALL_DRAG_FACTOR = 0.998; // Reduced air resistance for better ball movement
+const GOAL_TOP = GOAL_HEIGHT / 2; // Y-position of the top goal
+const GOAL_BOTTOM = FIELD_HEIGHT - GOAL_HEIGHT / 2; // Y-position of the bottom goal
 
 // Performance optimization settings
 const PHYSICS_UPDATE_RATE = 1000 / 60; // Increased to 60fps for smoother physics
@@ -376,41 +378,41 @@ function createBoundaries() {
         render: {
             fillStyle: '#ffffff',
             strokeStyle: '#ffffff',
-            lineWidth: 1
+            lineWidth: 2
         }
     };
 
     // Top wall (with gap for goal)
     const topLeftWall = Bodies.rectangle(
-        FIELD_WIDTH / 4,
         WALL_THICKNESS / 2,
-        FIELD_WIDTH / 2 - GOAL_WIDTH / 2,
+        FIELD_HEIGHT / 2,
         WALL_THICKNESS,
+        FIELD_HEIGHT,
         wallOptions
     );
 
     const topRightWall = Bodies.rectangle(
-        FIELD_WIDTH * 3 / 4,
         WALL_THICKNESS / 2,
-        FIELD_WIDTH / 2 - GOAL_WIDTH / 2,
+        FIELD_HEIGHT / 2,
         WALL_THICKNESS,
+        FIELD_HEIGHT,
         wallOptions
     );
 
     // Bottom wall (with gap for goal)
     const bottomLeftWall = Bodies.rectangle(
-        FIELD_WIDTH / 4,
-        FIELD_HEIGHT - WALL_THICKNESS / 2,
-        FIELD_WIDTH / 2 - GOAL_WIDTH / 2,
+        WALL_THICKNESS / 2,
+        FIELD_HEIGHT / 2,
         WALL_THICKNESS,
+        FIELD_HEIGHT,
         wallOptions
     );
 
     const bottomRightWall = Bodies.rectangle(
-        FIELD_WIDTH * 3 / 4,
-        FIELD_HEIGHT - WALL_THICKNESS / 2,
-        FIELD_WIDTH / 2 - GOAL_WIDTH / 2,
+        WALL_THICKNESS / 2,
+        FIELD_HEIGHT / 2,
         WALL_THICKNESS,
+        FIELD_HEIGHT,
         wallOptions
     );
 
@@ -1248,7 +1250,7 @@ function startResetCountdown() {
     const countdownElement = document.createElement('div');
     countdownElement.className = 'countdown-display';
     countdownElement.style.position = 'absolute';
-    countdownElement.style.top = '15px';
+    countdownElement.style.top = '165px';
     countdownElement.style.left = '50%';
     countdownElement.style.transform = 'translateX(-50%)';
     countdownElement.style.fontSize = '42px';
@@ -1258,9 +1260,9 @@ function startResetCountdown() {
     countdownElement.style.textShadow = '0 0 20px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.6)';
     countdownElement.style.background = 'linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.5) 100%)';
     countdownElement.style.border = '1px solid rgba(255, 255, 255, 0.3)';
-    countdownElement.style.borderRadius = '8px';
+    countdownElement.style.borderRadius = '50px';
     countdownElement.style.width = '80px';
-    countdownElement.style.height = '60px';
+    countdownElement.style.height = '80px';
     countdownElement.style.display = 'flex';
     countdownElement.style.alignItems = 'center';
     countdownElement.style.justifyContent = 'center';
@@ -1287,7 +1289,7 @@ function startResetCountdown() {
             // Show "GO!" with enhanced styling
             countdownElement.textContent = 'GO!';
             countdownElement.style.color = '#00ff00';
-            countdownElement.style.fontSize = '56px';
+            countdownElement.style.fontSize = '45px';
             countdownElement.style.textShadow = '0 0 40px rgba(0, 255, 0, 0.8), 0 0 80px rgba(0, 255, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.7)';
             countdownElement.style.border = '2px solid rgba(0, 255, 0, 0.6)';
             countdownElement.style.background = 'linear-gradient(135deg, rgba(0, 255, 0, 0.15) 0%, rgba(0, 255, 0, 0.08) 50%, rgba(0, 255, 0, 0.05) 100%)';
@@ -1315,6 +1317,9 @@ function startResetCountdown() {
 function resetBalls() {
     // Reset ball scoring state
     window.game.ballsScored = [false, false];
+    
+    // Ensure gameActive is true when resetting balls
+    window.game.gameActive = true;
 
     // Clean up existing 2D balls first
     if (window.game.ball2D) {
@@ -1372,9 +1377,21 @@ function resetBalls() {
         y: OPPONENT_START_Y
     });
 
-    // Stop the players
+    // Stop the players but keep the game active
     Body.setVelocity(window.game.player1, { x: 0, y: 0 });
     Body.setVelocity(window.game.player2, { x: 0, y: 0 });
+    
+    // Make sure AI state is reset
+    if (window.game.aiState) {
+        window.game.aiState = {
+            lastUpdate: 0
+        };
+    }
+    
+    // Restart AI if it was stopped
+    if (!window.game.aiUpdateInterval) {
+        startAI();
+    }
 }
 
 // Reset a single ball position and velocity
@@ -1510,7 +1527,7 @@ function addGoalEffect(isPlayerGoal) {
     goalText.className = 'goal-text';
     goalText.textContent = 'GOAL!';
     goalText.style.position = 'absolute';
-    goalText.style.top = '50%';
+    goalText.style.top = '20%';
     goalText.style.left = '50%';
     goalText.style.transform = 'translate(-50%, -50%)';
     goalText.style.color = '#fff';
@@ -1546,114 +1563,126 @@ function startAI() {
         clearInterval(window.game.aiUpdateInterval);
     }
 
-    // Check if performance mode is enabled
-    const performanceMode = localStorage.getItem('performanceMode') === 'true';
+    // Set a faster update frequency for more responsive AI
+    const updateFrequency = 16; // ~60fps for smoother movement
 
-    // Set update frequency based on performance mode
-    const updateFrequency = performanceMode ? 100 : 33; // 10fps vs 30fps
-
-    // Make updateAI function globally available so performance mode can adjust it
+    // Make updateAI function globally available
     window.updateAI = updateAI;
 
     // Start AI update interval
     window.game.aiUpdateInterval = setInterval(updateAI, updateFrequency);
 }
 
+document.addEventListener('DOMContentLoaded', startAI);
+
 // Update AI movement
 function updateAI() {
-    if (!window.game.gameActive) return;
+    try {
+        // Check if required objects exist and game is active
+        if (!window.game || !window.game.player2 || !window.game.gameActive) {
+            return;
+        }
 
-    // Initialize AI state tracking if it doesn't exist
-    if (!window.game.aiState) {
-        window.game.aiState = {
-            lastBehaviorChange: Date.now(),
-            isBackingOff: false,
-            backoffStartTime: 0,
-            backoffDuration: 2000, // 2 seconds of backing off (already set to 2 seconds)
-            normalBehaviorDuration: 3000, // 3 seconds of normal behavior
-            ballOnAISide: false,
-            ballOnAISideStartTime: 0,
-            ballOnAISideDuration: 2000 // 2 seconds before backing off when ball is on AI's side
-        };
-    }
-
-    const currentTime = Date.now();
-    const aiState = window.game.aiState;
-
-    // Find the closest ball to the AI (only consider existing balls)
-    let targetBall = null;
-
-    if (window.game.ball && window.game.ball2) {
-        // Both balls exist, choose the closest one
-        const distToBall1 = Vector.magnitude(Vector.sub(window.game.ball.position, window.game.player2.position));
-        const distToBall2 = Vector.magnitude(Vector.sub(window.game.ball2.position, window.game.player2.position));
-        targetBall = distToBall2 < distToBall1 ? window.game.ball2 : window.game.ball;
-    } else if (window.game.ball) {
-        // Only first ball exists
-        targetBall = window.game.ball;
-    } else if (window.game.ball2) {
-        // Only second ball exists
-        targetBall = window.game.ball2;
-    }
-
-    // If no balls exist, do nothing
-    if (!targetBall) {
-        return;
-    }
-
-    // Check if target ball is on AI's side (top half of the field)
-    const isBallOnAISide = targetBall.position.y < FIELD_HEIGHT / 2;
-
-    // Track how long the ball has been on AI's side
-    if (isBallOnAISide) {
-        if (!aiState.ballOnAISide) {
-            // Ball just entered AI's side
-            aiState.ballOnAISide = true;
-            aiState.ballOnAISideStartTime = currentTime;
-        } else if (currentTime - aiState.ballOnAISideStartTime > aiState.ballOnAISideDuration) {
-            // Ball has been on AI's side for more than 2 seconds
-            if (!aiState.isBackingOff) {
-                aiState.isBackingOff = true;
-                aiState.backoffStartTime = currentTime;
-
+        const ai = window.game.player2;
+        const balls = [];
+        
+        // Check if balls exist and are in play
+        if (window.game.ball && window.game.ball.position) {
+            balls.push(window.game.ball);
+        }
+        if (window.game.ball2 && window.game.ball2.position) {
+            balls.push(window.game.ball2);
+        }
+        
+        // Filter balls that are in AI's field (top half)
+        const ballsInAIField = balls.filter(ball => ball.position.y < FIELD_HEIGHT / 2);
+        
+        // If no balls in AI field, move randomly in the center
+        if (ballsInAIField.length === 0) {
+            // Initialize AI state if it doesn't exist
+            window.game.aiState = window.game.aiState || {
+                lastRandomMove: 0,
+                randomTarget: { x: 0, y: 0 }
+            };
+            
+            const now = Date.now();
+            const aiState = window.game.aiState;
+            
+            // Choose a new random position every 1-2 seconds
+            if (now - aiState.lastRandomMove > 1000 + Math.random() * 1000) {
+                // Random position in the top half but not too close to goals
+                aiState.randomTarget = {
+                    x: FIELD_WIDTH * 0.25 + Math.random() * (FIELD_WIDTH * 0.5),
+                    y: FIELD_HEIGHT * 0.15 + Math.random() * (FIELD_HEIGHT * 0.2)
+                };
+                aiState.lastRandomMove = now;
+            }
+            
+            // Move towards random position
+            const dx = aiState.randomTarget.x - ai.position.x;
+            const dy = aiState.randomTarget.y - ai.position.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > 5) { // Only move if not too close to target
+                const dirX = dx / distance;
+                const dirY = dy / distance;
+                const force = 0.0007; // Slightly slower movement when patrolling
+                
+                Body.applyForce(ai, ai.position, {
+                    x: dirX * force,
+                    y: dirY * force
+                });
+            }
+            
+            return; // Skip the rest of the function for random movement
+        }
+        
+        // Choose a target ball (random if multiple in field)
+        const targetBall = ballsInAIField[Math.floor(Math.random() * ballsInAIField.length)];
+        
+        // Calculate direction to target ball
+        const dx = targetBall.position.x - ai.position.x;
+        const dy = targetBall.position.y - ai.position.y;
+        
+        // Calculate distance to target ball
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > 10) { // Only move if not too close to the ball
+            // Normalize direction
+            const dirX = dx / distance;
+            const dirY = dy / distance;
+            
+            // Calculate force based on distance (faster when further away)
+            const baseForce = 0.008;
+            const distanceFactor = Math.min(distance / 50, 2.5);
+            const force = baseForce * distanceFactor;
+            
+            // Apply force in direction of ball
+            Body.applyForce(ai, ai.position, {
+                x: dirX * force,
+                y: dirY * force
+            });
+            
+            // Limit maximum speed
+            const maxSpeed = 12;
+            const speed = Math.sqrt(ai.velocity.x * ai.velocity.x + ai.velocity.y * ai.velocity.y);
+            if (speed > maxSpeed) {
+                const ratio = maxSpeed / speed;
+                Body.setVelocity(ai, {
+                    x: ai.velocity.x * ratio,
+                    y: ai.velocity.y * ratio
+                });
             }
         }
-    } else {
-        // Ball is not on AI's side
-        aiState.ballOnAISide = false;
+        
+        // Apply some friction to prevent sliding
+        Body.setVelocity(ai, {
+            x: ai.velocity.x * 0.93,
+            y: ai.velocity.y * 0.93
+        });
+    } catch (e) {
+        console.error('AI update error:', e);
     }
-
-    // Check if target ball is stuck
-    const isBallStuck = isBallStuckInCorner(targetBall) || isBallMovingTooSlow(targetBall);
-
-    // If ball is stuck, handle it with special behavior
-    if (isBallStuck) {
-        handleStuckBallAI(targetBall);
-        // Reset behavior timer when handling stuck ball
-        aiState.lastBehaviorChange = currentTime;
-        aiState.isBackingOff = false;
-    }
-    // Regular behavior switching between normal and backing off
-    else if (aiState.isBackingOff) {
-        // Currently backing off, check if we should return to normal
-        if (currentTime - aiState.backoffStartTime > aiState.backoffDuration) {
-            aiState.isBackingOff = false;
-            aiState.lastBehaviorChange = currentTime;
-
-        } else {
-            // Continue backing off
-            backoffBehavior();
-        }
-    } else {
-        // Normal behavior
-        normalAIBehavior(targetBall);
-    }
-
-    // Apply some friction to prevent excessive speed
-    Body.setVelocity(window.game.player2, {
-        x: window.game.player2.velocity.x * 0.95,
-        y: window.game.player2.velocity.y * 0.95
-    });
 }
 
 // Check if ball is stuck in a corner
@@ -1871,14 +1900,11 @@ function handleStuckBallAI(targetBall = window.game.ball) {
     }
 }
 
-// Normal AI behavior when ball is not stuck
+// Normal AI behavior (kept for compatibility, but simplified)
 function normalAIBehavior() {
-    // Define a buffer zone from the middle line
-    const MIDDLE_LINE_BUFFER = 40; // Pixels to stay away from the middle line
-    const AI_MAX_Y = FIELD_HEIGHT / 2 - MIDDLE_LINE_BUFFER;
-
-    // Check if AI is too close to the middle line
-    const isTooCloseToMiddle = window.game.player2.position.y > AI_MAX_Y;
+    // This function is kept for compatibility but does nothing
+    // as all AI logic is now in updateAI()
+    return;
 
     // Only move if ball is in AI's half (top half)
     if (window.game.ball.position.y < FIELD_HEIGHT / 2) {
@@ -1984,8 +2010,8 @@ function backoffBehavior() {
     // If already far enough from ball, move to a strategic position
     if (distToBall > PLAYER_RADIUS * 6) {
         // Move to a position that anticipates where the ball might go
-        // For example, position between the ball and the goal
-        const goalPosition = { x: FIELD_WIDTH / 2, y: GOAL_TOP + GOAL_HEIGHT / 2 };
+        // Position between the ball and the goal
+        const goalPosition = { x: FIELD_WIDTH / 2, y: GOAL_TOP };
         let anticipatedPosition = {
             x: (window.game.ball.position.x + goalPosition.x) / 2,
             y: (window.game.ball.position.y + goalPosition.y) / 2
