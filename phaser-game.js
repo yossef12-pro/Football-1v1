@@ -139,11 +139,76 @@ const AI_SPEED = 0.04; // Speed multiplier for AI movement
 const BALL_DRAG_FACTOR = 0.998; // Reduced air resistance for better ball movement
 const GOAL_TOP = GOAL_HEIGHT / 2; // Y-position of the top goal
 const GOAL_BOTTOM = FIELD_HEIGHT - GOAL_HEIGHT / 2; // Y-position of the bottom goal
+const GOAL_DEPTH = 40; // Depth of the goal box lines in front of goals
 
 // Performance optimization settings
 const PHYSICS_UPDATE_RATE = 1000 / 60; // Increased to 60fps for smoother physics
 const EXTREME_PERFORMANCE_MODE = false; // Disable extreme optimizations for better physics
 const MAX_VELOCITY = 30; // Increased max velocity for more dynamic gameplay
+
+// Function to position net images on both goals
+function positionNetImage() {
+    const nets = [];
+    const goalWidth = 120; // GOAL_WIDTH from your constants
+    const goalHeight = 10; // GOAL_HEIGHT from your constants
+    const netAspectRatio = 2; // Width to height ratio of the net image
+    
+    // Keep original net width and calculate height based on aspect ratio
+    const netWidth = goalWidth * 1; // 90% of goal width
+    const netHeight = netWidth / netAspectRatio;
+    
+    // Create a net for the top goal (upside down)
+    // Positioned above the goal line with some space
+    const topNet = createNetImage(
+        FIELD_WIDTH / 2 - netWidth / 2, // Center horizontally
+        -netHeight + goalHeight - 30,    // Position higher above the goal line
+        netWidth,
+        netHeight,
+        Math.PI,                        // Rotate 180 degrees for top goal
+        'top-goal-net'                   // Unique class for top net
+    );
+    
+    // Create a net for the bottom goal
+    // Positioned below the goal line with some space
+    const bottomNet = createNetImage(
+        FIELD_WIDTH / 2 - netWidth / 2, // Center horizontally
+        FIELD_HEIGHT - goalHeight + 30,   // Position lower below the goal line
+        netWidth,
+        netHeight,
+        0,                              // No rotation for bottom goal
+        'bottom-goal-net'                // Unique class for bottom net
+    );
+    
+    return [topNet, bottomNet];
+}
+
+// Helper function to create a single net image
+function createNetImage(x, y, width, height, rotation, className) {
+    const netImg = document.createElement('img');
+    netImg.src = 'assets/net.png';
+    netImg.className = className;
+    netImg.style.position = 'absolute';
+    netImg.style.width = width + 'px';
+    netImg.style.height = height + 'px';
+    netImg.style.left = x + 'px';
+    netImg.style.top = y + 'px';
+    netImg.style.transform = `rotate(${rotation}rad)`;
+    netImg.style.transformOrigin = 'center';
+    netImg.style.zIndex = '9999'; // Above everything
+    netImg.style.pointerEvents = 'none';
+    netImg.style.opacity = '0.9';
+    netImg.style.objectFit = 'cover'; // Ensure the image covers the area
+    netImg.style.objectPosition = 'center bottom';
+    netImg.style.overflow = 'visible'; // Allow overflow
+    netImg.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))';
+    
+    // Add a subtle white border to make it more visible
+    netImg.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+    netImg.style.borderRadius = '2px';
+    
+    document.getElementById('game-field').appendChild(netImg);
+    return netImg;
+}
 
 // Initialize the game
 window.startPhaserGame = function() {
@@ -312,6 +377,9 @@ function initPhysics() {
     // Start the engine using Runner (instead of Engine.run)
     window.game.runner = Runner.create();
     Runner.run(window.game.runner, window.game.engine);
+    
+    // Add the net image to the field
+    positionNetImage();
 
     // Set up collision event handling
     Events.on(window.game.engine, 'collisionStart', handleCollisions);
@@ -501,19 +569,20 @@ function createCenterBarrier() {
     World.add(window.game.world, centerBarrier);
 }
 
+
 // Create goals
 function createGoals() {
     // Goal post thickness
-    const postThickness = 2;
-
+    const postThickness = 1.5;
+    const goalDepth = 15; // Depth of the goal box
+    
     // Goal net options
     const netOptions = {
         isStatic: true,
         isSensor: true,
         render: {
-            fillStyle: 'rgba(255, 255, 255, 0.2)',
-            strokeStyle: '#ffffff',
-            lineWidth: 1
+            fillStyle: '#ffffff',
+            opacity: 0.3
         }
     };
 
@@ -527,9 +596,9 @@ function createGoals() {
             ...netOptions,
             label: 'topGoal',
             render: {
-                fillStyle: 'rgba(255, 255, 255, 0.1)',
-                strokeStyle: '#ffffff',
-                lineWidth: 0.5
+                ...netOptions.render,
+                lineWidth: 0.6,
+                strokeStyle: 'rgba(255, 255, 255, 0.8)'
             }
         }
     );
@@ -544,42 +613,46 @@ function createGoals() {
             ...netOptions,
             label: 'bottomGoal',
             render: {
-                fillStyle: 'rgba(255, 255, 255, 0.1)',
-                strokeStyle: '#ffffff',
-                lineWidth: 0.5
+                ...netOptions.render,
+                lineWidth: 0.6,
+                strokeStyle: 'rgba(255, 255, 255, 0.8)'
             }
         }
     );
 
-    // Goal posts (visual and physical)
+    // Goal post options
     const goalPostOptions = {
         isStatic: true,
         restitution: 0.5,
         render: {
-            fillStyle: '#ffffff'
+            fillStyle: '#000000',
+            strokeStyle: '#000000',
+            lineWidth: 2
         }
     };
+
+    // Goal box lines removed
 
     // Top goal posts
     const topLeftPost = Bodies.rectangle(
         FIELD_WIDTH / 2 - GOAL_WIDTH / 2,
+        0,
         postThickness,
-        postThickness,
-        GOAL_HEIGHT * 2,
+        GOAL_HEIGHT,
         goalPostOptions
     );
 
     const topRightPost = Bodies.rectangle(
         FIELD_WIDTH / 2 + GOAL_WIDTH / 2,
+        0,
         postThickness,
-        postThickness,
-        GOAL_HEIGHT * 2,
+        GOAL_HEIGHT,
         goalPostOptions
     );
 
     const topCrossbar = Bodies.rectangle(
         FIELD_WIDTH / 2,
-        postThickness,
+        0,
         GOAL_WIDTH,
         postThickness,
         goalPostOptions
@@ -588,23 +661,23 @@ function createGoals() {
     // Bottom goal posts
     const bottomLeftPost = Bodies.rectangle(
         FIELD_WIDTH / 2 - GOAL_WIDTH / 2,
-        FIELD_HEIGHT - postThickness,
+        FIELD_HEIGHT,
         postThickness,
-        GOAL_HEIGHT * 2,
+        GOAL_HEIGHT,
         goalPostOptions
     );
 
     const bottomRightPost = Bodies.rectangle(
         FIELD_WIDTH / 2 + GOAL_WIDTH / 2,
-        FIELD_HEIGHT - postThickness,
+        FIELD_HEIGHT,
         postThickness,
-        GOAL_HEIGHT * 2,
+        GOAL_HEIGHT,
         goalPostOptions
     );
 
     const bottomCrossbar = Bodies.rectangle(
         FIELD_WIDTH / 2,
-        FIELD_HEIGHT - postThickness,
+        FIELD_HEIGHT,
         GOAL_WIDTH,
         postThickness,
         goalPostOptions
@@ -654,14 +727,7 @@ function createBall() {
     // Store initial ball position
     window.game.lastBallPosition = { ...window.game.ball.position };
 
-    // Give the ball an initial velocity in a random direction
-    const randomAngle = Math.random() * Math.PI * 2;
-    const initialSpeed = 5; // Base speed
-
-    Body.setVelocity(window.game.ball, {
-        x: Math.cos(randomAngle) * initialSpeed,
-        y: Math.sin(randomAngle) * initialSpeed
-    });
+    // Initial velocity will be set after the 2D ball is created
 }
 
 // Create second ball
@@ -697,14 +763,7 @@ function createSecondBall() {
     // Store initial ball position
     window.game.lastBall2Position = { ...window.game.ball2.position };
 
-    // Give the ball an initial velocity in a random direction (different from first ball)
-    const randomAngle = Math.random() * Math.PI * 2;
-    const initialSpeed = 5; // Base speed
-
-    Body.setVelocity(window.game.ball2, {
-        x: Math.cos(randomAngle) * initialSpeed,
-        y: Math.sin(randomAngle) * initialSpeed
-    });
+    // Initial velocity will be set after the 2D ball is created
 }
 
 // Create players
@@ -907,9 +966,43 @@ function createImpactEffect(x, y, isPoweredUp) {
     }, 300);
 }
 
+// Add goal glow element to player names
+function addGoalGlowElements() {
+    const player1Name = document.querySelector('.user1-info .user-name');
+    const player2Name = document.querySelector('.user2-info .user-name');
+    
+    // Create glow elements if they don't exist
+    if (!document.querySelector('.user1-info .goal-glow')) {
+        const glow1 = document.createElement('span');
+        glow1.className = 'goal-glow';
+        player1Name.prepend(glow1);
+    }
+    
+    if (!document.querySelector('.user2-info .goal-glow')) {
+        const glow2 = document.createElement('span');
+        glow2.className = 'goal-glow';
+        player2Name.prepend(glow2);
+    }
+}
+
+// Show goal glow for a player
+function showGoalGlow(playerNumber) {
+    const glowElement = document.querySelector(`.user${playerNumber}-info .goal-glow`);
+    if (glowElement) {
+        glowElement.classList.add('visible');
+        // Remove the glow after 3 seconds
+        setTimeout(() => {
+            glowElement.classList.remove('visible');
+        }, 3000);
+    }
+}
+
 // Handle collisions between game objects
 function handleCollisions(event) {
     const pairs = event.pairs;
+
+    // Add glow elements if they don't exist
+    addGoalGlowElements();
 
     for (let i = 0; i < pairs.length; i++) {
         const pair = pairs[i];
@@ -1188,61 +1281,79 @@ function deleteBall(ball) {
     }
 }
 
+// Completely remove ball physics and visuals
+function removeBallPhysics(ball) {
+    if (!ball) return;
+    
+    // Remove from physics world
+    World.remove(window.game.world, ball);
+    
+    // Remove all collision handlers
+    if (window.game.engine) {
+        const pairs = window.game.engine.pairs;
+        if (pairs && pairs.list) {
+            for (let i = pairs.list.length - 1; i >= 0; i--) {
+                const pair = pairs.list[i];
+                if (pair.bodyA === ball || pair.bodyB === ball) {
+                    pairs.list.splice(i, 1);
+                }
+            }
+        }
+    }
+    
+    // Remove from any constraints
+    if (window.game.world.constraints) {
+        window.game.world.constraints = window.game.world.constraints.filter(
+            constraint => constraint.bodyA !== ball && constraint.bodyB !== ball
+        );
+    }
+}
+
 // Start countdown before resetting balls
 function startResetCountdown() {
     // Pause the game during countdown
     window.game.gameActive = false;
 
-    // Immediately hide both balls and stop their movement
+    // Completely remove both balls from physics
     if (window.game.ball) {
-        // Stop ball movement
-        Body.setVelocity(window.game.ball, { x: 0, y: 0 });
-        Body.setAngularVelocity(window.game.ball, 0);
-
-        // Hide all visual elements for first ball
-        const ballElements = document.querySelectorAll('.ball-overlay:not(.ball2-overlay), .ball-shadow:not(.ball2-shadow), .ball-trail:not(.ball2-trail)');
-        ballElements.forEach(el => {
-            el.style.opacity = '0';
-            el.style.visibility = 'hidden';
-        });
-
-        // Hide 2D ball elements
-        if (window.game.ball2D) {
-            if (window.game.ball2D.ballElement) {
-                window.game.ball2D.ballElement.style.opacity = '0';
-                window.game.ball2D.ballElement.style.visibility = 'hidden';
-            }
-            if (window.game.ball2D.trailContainer) {
-                window.game.ball2D.trailContainer.style.opacity = '0';
-                window.game.ball2D.trailContainer.style.visibility = 'hidden';
-            }
-        }
+        removeBallPhysics(window.game.ball);
+        window.game.ball = null;
     }
-
+    
     if (window.game.ball2) {
-        // Stop ball movement
-        Body.setVelocity(window.game.ball2, { x: 0, y: 0 });
-        Body.setAngularVelocity(window.game.ball2, 0);
-
-        // Hide all visual elements for second ball
-        const ball2Elements = document.querySelectorAll('.ball2-overlay, .ball2-shadow, .ball2-trail');
-        ball2Elements.forEach(el => {
-            el.style.opacity = '0';
-            el.style.visibility = 'hidden';
-        });
-
-        // Hide 2D ball elements
-        if (window.game.ball2_2D) {
-            if (window.game.ball2_2D.ballElement) {
-                window.game.ball2_2D.ballElement.style.opacity = '0';
-                window.game.ball2_2D.ballElement.style.visibility = 'hidden';
-            }
-            if (window.game.ball2_2D.trailContainer) {
-                window.game.ball2_2D.trailContainer.style.opacity = '0';
-                window.game.ball2_2D.trailContainer.style.visibility = 'hidden';
-            }
-        }
+        removeBallPhysics(window.game.ball2);
+        window.game.ball2 = null;
     }
+    
+    // Clean up 2D ball instances
+    if (window.game.ball2D) {
+        if (window.game.ball2D.ballElement && window.game.ball2D.ballElement.parentNode) {
+            window.game.ball2D.ballElement.parentNode.removeChild(window.game.ball2D.ballElement);
+        }
+        if (window.game.ball2D.trailContainer && window.game.ball2D.trailContainer.parentNode) {
+            window.game.ball2D.trailContainer.parentNode.removeChild(window.game.ball2D.trailContainer);
+        }
+        window.game.ball2D.dispose();
+        window.game.ball2D = null;
+    }
+    
+    if (window.game.ball2_2D) {
+        if (window.game.ball2_2D.ballElement && window.game.ball2_2D.ballElement.parentNode) {
+            window.game.ball2_2D.ballElement.parentNode.removeChild(window.game.ball2_2D.ballElement);
+        }
+        if (window.game.ball2_2D.trailContainer && window.game.ball2_2D.trailContainer.parentNode) {
+            window.game.ball2_2D.trailContainer.parentNode.removeChild(window.game.ball2_2D.trailContainer);
+        }
+        window.game.ball2_2D.dispose();
+        window.game.ball2_2D = null;
+    }
+    
+    // Remove any remaining visual elements
+    document.querySelectorAll('.ball-overlay, .ball-shadow, .ball-trail, .ball2-overlay, .ball2-shadow, .ball2-trail').forEach(el => {
+        if (el && el.parentNode) {
+            el.parentNode.removeChild(el);
+        }
+    });
 
     let countdown = 3;
 
@@ -1250,7 +1361,7 @@ function startResetCountdown() {
     const countdownElement = document.createElement('div');
     countdownElement.className = 'countdown-display';
     countdownElement.style.position = 'absolute';
-    countdownElement.style.top = '165px';
+    countdownElement.style.top = '170px';
     countdownElement.style.left = '50%';
     countdownElement.style.transform = 'translateX(-50%)';
     countdownElement.style.fontSize = '42px';
@@ -1366,6 +1477,54 @@ function resetBalls() {
     // Create second 2D ball
     window.game.ball2_2D = Ball2D.createInstance(gameField, 'ball2');
 
+    // Reset speed for both 2D balls to make them slow at the start
+    if (window.game.ball2D) {
+        window.game.ball2D.resetSpeed();
+    }
+    if (window.game.ball2_2D) {
+        window.game.ball2_2D.resetSpeed();
+    }
+
+    // Set initial velocity for the physics bodies using the new reset speed
+    if (window.game.ball && window.game.ball2D) {
+        const randomAngle1 = Math.random() * Math.PI * 2;
+        Body.setVelocity(window.game.ball, {
+            x: Math.cos(randomAngle1) * window.game.ball2D.currentSpeed,
+            y: Math.sin(randomAngle1) * window.game.ball2D.currentSpeed
+        });
+    }
+    if (window.game.ball2 && window.game.ball2_2D) {
+        const randomAngle2 = Math.random() * Math.PI * 2;
+        Body.setVelocity(window.game.ball2, {
+            x: Math.cos(randomAngle2) * window.game.ball2_2D.currentSpeed,
+            y: Math.sin(randomAngle2) * window.game.ball2_2D.currentSpeed
+        });
+    }
+
+    // Reset speed for both 2D balls to make them slow again
+    if (window.game.ball2D) {
+        window.game.ball2D.resetSpeed();
+    }
+    if (window.game.ball2_2D) {
+        window.game.ball2_2D.resetSpeed();
+    }
+
+    // Set initial velocity for the physics bodies using the new reset speed
+    if (window.game.ball && window.game.ball2D) {
+        const randomAngle1 = Math.random() * Math.PI * 2;
+        Body.setVelocity(window.game.ball, {
+            x: Math.cos(randomAngle1) * window.game.ball2D.currentSpeed,
+            y: Math.sin(randomAngle1) * window.game.ball2D.currentSpeed
+        });
+    }
+    if (window.game.ball2 && window.game.ball2_2D) {
+        const randomAngle2 = Math.random() * Math.PI * 2;
+        Body.setVelocity(window.game.ball2, {
+            x: Math.cos(randomAngle2) * window.game.ball2_2D.currentSpeed,
+            y: Math.sin(randomAngle2) * window.game.ball2_2D.currentSpeed
+        });
+    }
+
     // Reset player positions
     Body.setPosition(window.game.player1, {
         x: FIELD_WIDTH / 2 - 50, // Offset to the left
@@ -1404,7 +1563,7 @@ function resetBall(ball, overlaySelector, shadowSelector, trailSelector, xOffset
         y: FIELD_HEIGHT / 2
     });
 
-    // Stop the ball
+    // Stop the ball initially
     Body.setVelocity(ball, { x: 0, y: 0 });
     Body.setAngularVelocity(ball, 0);
 
@@ -1439,7 +1598,8 @@ function resetBall(ball, overlaySelector, shadowSelector, trailSelector, xOffset
         if (!window.game || !ball) return; // Safety check
 
         const randomAngle = Math.random() * Math.PI * 2;
-        const kickStrength = 2; // Gentle initial kick
+        const ball2D = ball.label === 'ball2' ? window.game.ball2_2D : window.game.ball2D;
+        const kickStrength = ball2D ? ball2D.currentSpeed : 5; // Use current speed from 2D ball or default
 
         Body.setVelocity(ball, {
             x: Math.cos(randomAngle) * kickStrength,
@@ -1794,7 +1954,7 @@ function handleStuckBallAI(targetBall = window.game.ball) {
                     }
                 }, 2000);
 
-                // Give the ball a strong push toward the opponent's goal
+                // Give the ball a strong push toward the opponent's al
                 const ballVelocity = {
                     x: (Math.random() * 2 - 1) * 2, // Random horizontal direction
                     y: 1 // Always downward toward opponent's goal
@@ -2757,6 +2917,35 @@ function endGame() {
         clearInterval(window.game.timerInterval);
         window.game.timerInterval = null;
     }
+    
+    // Clean up both balls
+    if (window.game.ball) {
+        deleteBall(window.game.ball);
+        window.game.ball = null;
+    }
+    
+    if (window.game.ball2) {
+        deleteBall(window.game.ball2);
+        window.game.ball2 = null;
+    }
+    
+    // Clean up 2D ball instances
+    if (window.game.ball2D) {
+        window.game.ball2D.dispose();
+        window.game.ball2D = null;
+    }
+    
+    if (window.game.ball2_2D) {
+        window.game.ball2_2D.dispose();
+        window.game.ball2_2D = null;
+    }
+    
+    // Remove any remaining ball visual elements
+    document.querySelectorAll('.ball-overlay, .ball-shadow, .ball-trail, .ball2-overlay, .ball2-shadow, .ball2-trail').forEach(el => {
+        if (el && el.parentNode) {
+            el.parentNode.removeChild(el);
+        }
+    });
 
     // Get final scores before any potential state changes
     const player1Score = window.game.score[0];
